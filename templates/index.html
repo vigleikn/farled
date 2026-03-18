@@ -356,9 +356,9 @@ let pinMarkerFrom = null, pinMarkerTo = null;
 const map = L.map('map', { center: [65.5, 14.0], zoom: 5, zoomControl: false });
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  attribution: '© OpenStreetMap contributors © CARTO',
-  subdomains: 'abcd', maxZoom: 19,
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19,
 }).addTo(map);
 
 L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
