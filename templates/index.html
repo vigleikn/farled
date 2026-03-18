@@ -3,372 +3,313 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sjøvei-kalkulator</title>
+  <title>Farled</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
     :root {
-      --navy:      #08141f;
-      --navy-mid:  #0f2030;
-      --navy-lift: #162840;
-      --navy-hi:   #1e3a55;
-      --gold:      #c4965a;
-      --gold-lt:   #ddb87a;
-      --sea:       #3ecfcc;
-      --text:      #c8bfaa;
-      --text-dim:  #6a7e8a;
-      --border:    rgba(196,150,90,0.22);
-      --panel-w:   340px;
+      --bg:       #09090b;
+      --surface:  #18181b;
+      --border:   #27272a;
+      --input-bd: #3f3f46;
+      --text:     #fafafa;
+      --muted:    #e4e4e7;
+      --subtle:   #d4d4d8;
+      --dim:      #a1a1aa;
+      --accent:   #3ecfcc;
+      --error:    #f87171;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
+    html, body { height: 100%; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; }
 
-    body {
-      display: flex;
-      font-family: 'Space Mono', monospace;
-      background: var(--navy);
+    body { background: #000; }
+
+    /* ── Full-screen map ── */
+    #map {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* ── Floating card ── */
+    .card {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 900;
+      width: 288px;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      background: rgba(9, 9, 11, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
       color: var(--text);
     }
 
-    /* ═════ LEFT PANEL ═════ */
-    .panel {
-      width: var(--panel-w);
-      min-width: var(--panel-w);
-      height: 100vh;
+    .card::-webkit-scrollbar { width: 3px; }
+    .card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* ── Header ── */
+    .card-header {
+      padding: 18px 18px 14px;
+    }
+
+    .app-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.2px;
+    }
+
+    .app-subtitle {
+      font-size: 12px;
+      color: var(--subtle);
+      margin-top: 3px;
+    }
+
+    /* ── Body ── */
+    .card-body {
+      padding: 4px 18px 18px;
       display: flex;
       flex-direction: column;
-      background: linear-gradient(160deg, #0d1e2e 0%, #081320 100%);
-      border-right: 1px solid var(--border);
-      position: relative;
-      z-index: 900;
-      overflow: hidden;
+      gap: 14px;
     }
 
-    .panel::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(196,150,90,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(196,150,90,0.04) 1px, transparent 1px);
-      background-size: 24px 24px;
-      pointer-events: none;
-    }
-
-    /* Header */
-    .panel-head {
-      padding: 24px 24px 18px;
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      z-index: 1;
-    }
-
-    .head-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .logo-block h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.6rem;
-      font-weight: 700;
-      line-height: 0.88;
-      color: #fff;
-    }
-
-    .logo-block h1 em { font-style: normal; color: var(--gold); }
-
-    .logo-block .tagline {
-      margin-top: 7px;
-      font-size: 0.55rem;
-      letter-spacing: 0.22em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-    }
-
-    /* Compass */
-    .compass { width: 54px; height: 54px; flex-shrink: 0; }
-    .compass .rose-outer { transform-origin: 50% 50%; animation: rose-spin 90s linear infinite; }
-    .compass .rose-inner { transform-origin: 50% 50%; animation: rose-spin 45s linear infinite reverse; }
-    @keyframes rose-spin { to { transform: rotate(360deg); } }
-
-    /* Controls */
-    .controls {
-      padding: 22px 22px 10px;
-      flex: 1;
-      overflow: visible;
-      position: relative;
-      z-index: 1;
-    }
+    .field { display: flex; flex-direction: column; gap: 5px; }
 
     .field-label {
-      font-size: 0.55rem;
-      letter-spacing: 0.28em;
-      color: var(--gold);
-      text-transform: uppercase;
-      margin-bottom: 7px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
     }
-    .field-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-    .search-wrap { position: relative; margin-bottom: 6px; }
+    /* ── Input ── */
+    .search-wrap { position: relative; }
 
     .search-input {
       width: 100%;
-      background: var(--navy-lift);
-      border: 1px solid var(--border);
+      background: var(--surface);
+      border: 1px solid var(--input-bd);
+      border-radius: 8px;
       color: var(--text);
-      padding: 11px 60px 11px 12px;
-      font-family: 'Space Mono', monospace;
-      font-size: 0.75rem;
+      padding: 9px 34px 9px 12px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
       outline: none;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      transition: border-color 0.15s, box-shadow 0.15s;
       -webkit-appearance: none;
     }
-    .search-input:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(196,150,90,0.12); }
-    .search-input::placeholder { color: var(--text-dim); }
-    .search-input.pinned { border-color: var(--sea); color: var(--sea); }
+    .search-input:focus {
+      border-color: var(--dim);
+      box-shadow: 0 0 0 2px rgba(161, 161, 170, 0.15);
+    }
+    .search-input::placeholder { color: var(--dim); }
+    .search-input.pinned { border-color: var(--accent); color: var(--accent); }
 
     .search-icon {
       position: absolute;
-      right: 34px; top: 50%;
+      right: 10px; top: 50%;
       transform: translateY(-50%);
-      color: var(--text-dim);
-      font-size: 0.7rem;
+      color: var(--dim);
+      font-size: 14px;
       pointer-events: none;
     }
 
+    /* ── Pin button (standalone, below input) ── */
     .pin-btn {
-      position: absolute;
-      right: 0; top: 0; bottom: 0;
-      width: 32px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
       background: transparent;
-      border: none;
-      border-left: 1px solid var(--border);
-      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--dim);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 12px;
+      padding: 5px 10px;
       cursor: pointer;
-      font-size: 0.85rem;
-      display: flex; align-items: center; justify-content: center;
-      transition: color 0.15s, background 0.15s;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      width: fit-content;
     }
-    .pin-btn:hover { color: var(--sea); background: rgba(62,207,204,0.08); }
-    .pin-btn.active { color: var(--sea); background: rgba(62,207,204,0.15); }
+    .pin-btn:hover { color: var(--accent); border-color: var(--accent); background: rgba(62,207,204,0.06); }
+    .pin-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(62,207,204,0.1); }
 
-    .dd-section {
-      padding: 4px 10px 2px;
-      font-size: 0.5rem;
-      letter-spacing: 0.2em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      border-bottom: 1px solid var(--border);
-      background: var(--navy);
-    }
-    .dd-item-sub { font-size: 0.58rem; color: var(--text-dim); margin-top: 2px; }
+    /* ── Separator ── */
+    .sep { height: 1px; background: var(--border); }
 
+    /* ── Dropdown ── */
     .dropdown {
       position: absolute;
-      top: 100%; left: 0; right: 0;
-      background: var(--navy-mid);
-      border: 1px solid var(--border);
-      border-top: none;
+      top: calc(100% + 4px); left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid var(--input-bd);
+      border-radius: 8px;
       max-height: 220px;
       overflow-y: auto;
-      z-index: 200;
+      z-index: 1000;
       display: none;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     }
     .dropdown::-webkit-scrollbar { width: 3px; }
     .dropdown::-webkit-scrollbar-thumb { background: var(--border); }
     .dropdown.open { display: block; }
 
-    .dd-item {
-      padding: 9px 12px;
-      cursor: pointer;
-      border-bottom: 1px solid rgba(196,150,90,0.08);
-      transition: background 0.12s;
+    .dd-section {
+      padding: 6px 12px 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--dim);
     }
-    .dd-item:last-child { border-bottom: none; }
-    .dd-item:hover, .dd-item.focused { background: var(--navy-hi); }
+
+    .dd-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .dd-item:hover, .dd-item.focused { background: var(--border); }
 
     .dd-item-name {
-      font-size: 0.74rem;
+      font-size: 13px;
       color: var(--text);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .dd-item-id { font-size: 0.58rem; color: var(--text-dim); margin-top: 2px; }
+    .dd-item-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
 
-    /* Connector */
-    .connector {
-      display: flex;
-      align-items: center;
-      padding: 10px 0 10px 6px;
-    }
-    .connector-line {
-      width: 1px; height: 28px;
-      background: linear-gradient(to bottom, var(--sea), var(--gold));
-      margin-left: 5px;
-    }
-
-    /* Button */
+    /* ── Calculate button ── */
     .calc-btn {
       width: 100%;
-      margin-top: 18px;
-      padding: 13px 16px;
-      background: transparent;
-      border: 1px solid var(--gold);
-      color: var(--gold);
-      font-family: 'Space Mono', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
+      padding: 10px;
+      background: var(--text);
+      color: var(--bg);
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      font-weight: 500;
       cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: color 0.25s;
+      transition: background 0.15s;
     }
-    .calc-btn .btn-fill {
-      position: absolute; inset: 0;
-      background: var(--gold);
-      transform: translateX(-101%);
-      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-    }
-    .calc-btn:not(:disabled):hover .btn-fill { transform: translateX(0); }
-    .calc-btn:not(:disabled):hover { color: var(--navy); }
-    .calc-btn .btn-label { position: relative; z-index: 1; }
-    .calc-btn:disabled { opacity: 0.35; cursor: not-allowed; border-color: var(--text-dim); color: var(--text-dim); }
+    .calc-btn:not(:disabled):hover { background: #e4e4e7; }
+    .calc-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
-    /* Result */
+    /* ── Result ── */
     .result {
-      margin: 0 22px 12px;
-      border: 1px solid rgba(62,207,204,0.3);
-      background: linear-gradient(135deg, rgba(62,207,204,0.05), transparent);
-      padding: 18px;
+      margin: 0 18px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
       display: none;
-      position: relative;
-      z-index: 1;
-      animation: slide-in 0.35s ease;
+      animation: slide-in 0.25s ease;
     }
     .result.show { display: block; }
-    @keyframes slide-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slide-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
-    .result-eyebrow { font-size: 0.52rem; letter-spacing: 0.25em; color: var(--sea); text-transform: uppercase; margin-bottom: 10px; }
+    .result-eyebrow {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 8px;
+    }
 
-    .dist-row { display: flex; align-items: baseline; gap: 6px; }
-    .dist-num { font-family: 'Cormorant Garamond', serif; font-size: 3.8rem; font-weight: 600; color: #fff; line-height: 1; }
-    .dist-unit { font-size: 0.85rem; color: var(--sea); letter-spacing: 0.08em; }
-    .dist-km { font-size: 0.65rem; color: var(--text-dim); margin-top: 3px; }
+    .dist-row { display: flex; align-items: baseline; gap: 5px; }
+    .dist-num { font-size: 32px; font-weight: 600; color: var(--text); line-height: 1; }
+    .dist-unit { font-size: 14px; color: var(--subtle); }
+    .dist-km { font-size: 12px; color: var(--dim); margin-top: 4px; }
 
-    .result-route { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(196,150,90,0.15); }
-    .result-stop { display: flex; align-items: flex-start; gap: 9px; margin-bottom: 8px; }
-    .stop-pip { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
-    .stop-pip.from { background: var(--sea); box-shadow: 0 0 6px var(--sea); }
-    .stop-pip.to   { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
-    .stop-label { font-size: 0.55rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; }
-    .stop-name { color: var(--text); font-size: 0.72rem; line-height: 1.3; }
+    .result-route {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .result-stop { display: flex; align-items: flex-start; gap: 8px; }
+    .stop-pip { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .stop-pip.from { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+    .stop-pip.to   { background: var(--subtle); }
+    .stop-label { font-size: 11px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.08em; }
+    .stop-name { font-size: 13px; color: var(--muted); line-height: 1.3; margin-top: 1px; }
 
-    /* Error */
+    /* ── Error ── */
     .error-msg {
-      margin: 0 22px 12px;
+      margin: 0 18px 18px;
       padding: 12px 14px;
-      background: rgba(255,80,80,0.08);
-      border: 1px solid rgba(255,80,80,0.3);
-      font-size: 0.68rem;
-      color: #ff9090;
+      background: rgba(248, 113, 113, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--error);
       display: none;
-      position: relative;
-      z-index: 1;
       line-height: 1.5;
     }
     .error-msg.show { display: block; }
 
-    /* Status bar */
+    /* ── Status bar ── */
     .statusbar {
-      padding: 10px 22px;
+      padding: 10px 18px;
       border-top: 1px solid var(--border);
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 0.58rem;
-      color: var(--text-dim);
-      letter-spacing: 0.08em;
-      position: relative;
-      z-index: 1;
+      gap: 7px;
+      font-size: 11px;
+      color: var(--dim);
     }
     .spip { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-    .spip.ok   { background: var(--sea); animation: blink 3s ease-in-out infinite; }
-    .spip.warn { background: var(--gold); animation: blink 1.5s ease-in-out infinite; }
-    .spip.err  { background: #ff6060; }
+    .spip.ok   { background: var(--accent); animation: blink 3s ease-in-out infinite; }
+    .spip.warn { background: #fbbf24; animation: blink 1.5s ease-in-out infinite; }
+    .spip.err  { background: var(--error); }
     @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
-
-    /* Map */
-    #map { flex: 1; height: 100vh; }
   </style>
 </head>
 <body>
 
-<aside class="panel">
+<div id="map"></div>
 
-  <div class="panel-head">
-    <div class="head-row">
-      <div class="logo-block">
-        <h1>SJØ<em>VEI</em></h1>
-        <p class="tagline">Farled-kalkulator · Norge</p>
-      </div>
+<div class="card">
 
-      <svg class="compass" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(196,150,90,0.25)" stroke-width="1"/>
-        <g class="rose-outer" stroke="rgba(196,150,90,0.5)" stroke-width="1">
-          <line x1="50" y1="6"  x2="50" y2="14"/>
-          <line x1="50" y1="86" x2="50" y2="94"/>
-          <line x1="6"  y1="50" x2="14" y2="50"/>
-          <line x1="86" y1="50" x2="94" y2="50"/>
-          <line x1="17.9" y1="17.9" x2="23.6" y2="23.6"/>
-          <line x1="76.4" y1="76.4" x2="82.1" y2="82.1"/>
-          <line x1="82.1" y1="17.9" x2="76.4" y2="23.6"/>
-          <line x1="23.6" y1="76.4" x2="17.9" y2="82.1"/>
-        </g>
-        <g class="rose-inner" fill="none">
-          <polygon points="50,12 46,50 50,46 54,50" fill="#c4965a"/>
-          <polygon points="50,88 46,50 50,54 54,50" fill="rgba(196,150,90,0.35)"/>
-          <polygon points="88,50 50,46 54,50 50,54" fill="rgba(196,150,90,0.35)"/>
-          <polygon points="12,50 50,46 46,50 50,54" fill="rgba(196,150,90,0.35)"/>
-          <circle cx="50" cy="50" r="4" fill="#c4965a"/>
-          <circle cx="50" cy="50" r="2" fill="#081320"/>
-        </g>
-        <text x="50" y="5.5" text-anchor="middle" font-family="Space Mono,monospace" font-size="7" fill="#c4965a">N</text>
-      </svg>
-    </div>
+  <div class="card-header">
+    <div class="app-title">Farled</div>
+    <div class="app-subtitle">Distanser til sjøs i Norge</div>
   </div>
 
-  <div class="controls">
+  <div class="card-body">
 
-    <div class="field-label">Fra kai</div>
-    <div class="search-wrap">
-      <input type="text" class="search-input" id="from-input" placeholder="Kai, adresse eller pin i kart…" autocomplete="off"/>
-      <span class="search-icon">⌕</span>
-      <button class="pin-btn" id="from-pin" title="Sett pin i kart">📍</button>
-      <div class="dropdown" id="from-dd"></div>
+    <div class="field">
+      <label class="field-label">Fra kai</label>
+      <div class="search-wrap">
+        <input type="text" class="search-input" id="from-input" placeholder="Søk etter kai eller adresse…" autocomplete="off"/>
+        <span class="search-icon">⌕</span>
+        <div class="dropdown" id="from-dd"></div>
+      </div>
+      <button class="pin-btn" id="from-pin" title="Sett pin i kart">📍 Sett pin i kart</button>
     </div>
 
-    <div class="connector"><div class="connector-line"></div></div>
+    <div class="sep"></div>
 
-    <div class="field-label">Til kai</div>
-    <div class="search-wrap">
-      <input type="text" class="search-input" id="to-input" placeholder="Kai, adresse eller pin i kart…" autocomplete="off"/>
-      <span class="search-icon">⌕</span>
-      <button class="pin-btn" id="to-pin" title="Sett pin i kart">📍</button>
-      <div class="dropdown" id="to-dd"></div>
+    <div class="field">
+      <label class="field-label">Til kai</label>
+      <div class="search-wrap">
+        <input type="text" class="search-input" id="to-input" placeholder="Søk etter kai eller adresse…" autocomplete="off"/>
+        <span class="search-icon">⌕</span>
+        <div class="dropdown" id="to-dd"></div>
+      </div>
+      <button class="pin-btn" id="to-pin" title="Sett pin i kart">📍 Sett pin i kart</button>
     </div>
 
     <button class="calc-btn" id="calc-btn" disabled>
-      <div class="btn-fill"></div>
-      <span class="btn-label" id="btn-label">Beregn sjøvei</span>
+      <span id="btn-label">Beregn sjøvei</span>
     </button>
 
   </div>
@@ -399,18 +340,16 @@
     <span id="stxt">Starter…</span>
   </div>
 
-</aside>
-
-<div id="map"></div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 // ─── State ────────────────────────────────────────────────────
-// Point: { lat, lon, name }
 let allQuays = [];
 let fromPoint = null, toPoint = null;
-let pinMode = null; // 'from' | 'to' | null
+let pinMode = null;
 let routeLayer = null, shadowLayer = null, fromMarker = null, toMarker = null;
+let waypointMarkers = [], routeLatLngs = [];
 let pinMarkerFrom = null, pinMarkerTo = null;
 
 // ─── Map ─────────────────────────────────────────────────────
@@ -447,7 +386,6 @@ async function loadQuays() {
 // ─── Pin mode ─────────────────────────────────────────────────
 function setPinMode(which) {
   if (pinMode === which) {
-    // toggle off
     pinMode = null;
     map.getContainer().style.cursor = '';
     document.getElementById('from-pin').classList.remove('active');
@@ -561,7 +499,7 @@ function makeSearch(inputId, ddId, which) {
     name.textContent = a.name;
     const sub = document.createElement('div');
     sub.className = 'dd-item-sub';
-    sub.textContent = (a.postcode ? a.postcode + ' ' : '') + a.municipality;
+    sub.textContent = (a.postcode ? a.postcode + ' ' : '') + (a.poststed || '') + (a.municipality ? ', ' + a.municipality : '');
     el.appendChild(name); el.appendChild(sub);
     el.addEventListener('mousedown', e => {
       e.preventDefault();
@@ -603,7 +541,6 @@ function makeSearch(inputId, ddId, which) {
       const addrs = await geocode(q);
       render(quayMatches, Array.isArray(addrs) ? addrs : []);
     }, 300);
-    // Show quays immediately while geocode is debounced
     render(quayMatches, []);
   });
 
@@ -680,14 +617,12 @@ function hideError() { document.getElementById('error-msg').classList.remove('sh
 
 // ─── Map drawing ─────────────────────────────────────────────
 function pipIcon(color) {
-  const div = document.createElement('div');
-  div.style.cssText = [
-    'width:14px','height:14px','border-radius:50%',
-    'background:' + color,
-    'border:2px solid #fff',
-    'box-shadow:0 0 8px ' + color,
-  ].join(';');
-  return L.divIcon({ html: div.outerHTML, className: '', iconSize: [14,14], iconAnchor: [7,7] });
+  return L.divIcon({
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 0 8px ${color};cursor:grab;box-sizing:border-box"></div>`,
+    className: '',
+    iconSize: [22, 22],
+    iconAnchor: [11, 11],
+  });
 }
 
 function pinIcon(color) {
@@ -698,22 +633,75 @@ function pinIcon(color) {
   return L.divIcon({ html: svg, className: '', iconSize: [20,28], iconAnchor: [10,28] });
 }
 
+function haversineNm(lat1, lon1, lat2, lon2) {
+  const R = 3440.065;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2
+          + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function updateDistance() {
+  let total = 0;
+  for (let i = 0; i < routeLatLngs.length - 1; i++) {
+    total += haversineNm(routeLatLngs[i][0], routeLatLngs[i][1],
+                         routeLatLngs[i+1][0], routeLatLngs[i+1][1]);
+  }
+  document.getElementById('dist-nm').textContent = total.toFixed(1);
+  document.getElementById('dist-km').textContent = '≈ ' + (total * 1.852).toFixed(1) + ' km';
+}
+
+const wpIcon = L.divIcon({
+  className: '',
+  html: `<div style="width:10px;height:10px;border-radius:50%;background:#1a1a1a;border:2px solid #3ecfcc;cursor:grab;margin:-5px 0 0 -5px"></div>`,
+  iconSize: [0, 0],
+});
+
 function drawRoute(data) {
   [routeLayer, shadowLayer, fromMarker, toMarker].forEach(l => { if (l) map.removeLayer(l); });
+  waypointMarkers.forEach(m => map.removeLayer(m));
+  waypointMarkers = [];
 
-  shadowLayer = L.geoJSON(data.route_geojson, {
-    style: { color: '#3ecfcc', weight: 10, opacity: 0.12, lineCap: 'round' },
-  }).addTo(map);
-  routeLayer = L.geoJSON(data.route_geojson, {
-    style: { color: '#3ecfcc', weight: 3, opacity: 0.95, lineCap: 'round', lineJoin: 'round' },
-  }).addTo(map);
+  // Build mutable latlngs from waypoints [[lon,lat],...]
+  routeLatLngs = data.waypoints.map(wp => [wp[1], wp[0]]);
 
-  const wps = data.waypoints;
-  const a = [wps[0][1], wps[0][0]];
-  const b = [wps[wps.length - 1][1], wps[wps.length - 1][0]];
+  shadowLayer = L.polyline(routeLatLngs, { color: '#3ecfcc', weight: 10, opacity: 0.12, lineCap: 'round' }).addTo(map);
+  routeLayer  = L.polyline(routeLatLngs, { color: '#3ecfcc', weight: 3, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(map);
 
-  fromMarker = L.marker(a, { icon: pipIcon('#3ecfcc') }).bindPopup(data.from_name).addTo(map);
-  toMarker   = L.marker(b, { icon: pipIcon('#c4965a') }).bindPopup(data.to_name).addTo(map);
+  // Draggable intermediate waypoints
+  for (let i = 1; i < routeLatLngs.length - 1; i++) {
+    const idx = i;
+    const m = L.marker(routeLatLngs[idx], { icon: wpIcon, draggable: true, zIndexOffset: 100 }).addTo(map);
+    m.on('dragstart', () => map.dragging.disable());
+    m.on('drag', () => {
+      const ll = m.getLatLng();
+      routeLatLngs[idx] = [ll.lat, ll.lng];
+      routeLayer.setLatLngs(routeLatLngs);
+      shadowLayer.setLatLngs(routeLatLngs);
+      updateDistance();
+    });
+    m.on('dragend', () => map.dragging.enable());
+    waypointMarkers.push(m);
+  }
+
+  const lastIdx = routeLatLngs.length - 1;
+  function makeDraggableEndpoint(latlng, color, name, idx) {
+    const m = L.marker(latlng, { icon: pipIcon(color), draggable: true, zIndexOffset: 200 }).bindPopup(name).addTo(map);
+    m.on('dragstart', () => map.dragging.disable());
+    m.on('drag', () => {
+      const ll = m.getLatLng();
+      routeLatLngs[idx] = [ll.lat, ll.lng];
+      routeLayer.setLatLngs(routeLatLngs);
+      shadowLayer.setLatLngs(routeLatLngs);
+      updateDistance();
+    });
+    m.on('dragend', () => map.dragging.enable());
+    return m;
+  }
+
+  fromMarker = makeDraggableEndpoint(routeLatLngs[0], '#3ecfcc', data.from_name, 0);
+  toMarker   = makeDraggableEndpoint(routeLatLngs[lastIdx], '#c4965a', data.to_name, lastIdx);
 
   map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
 }

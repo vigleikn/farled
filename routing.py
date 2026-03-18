@@ -23,6 +23,7 @@ def geodesic_dist_nm(lon1: float, lat1: float, lon2: float, lat2: float) -> floa
     return abs(dist_m) * NM_PER_METER
 
 
+
 def _round_coord(lon: float, lat: float, decimals: int = 6) -> tuple[float, float]:
     """Avrunder koordinat for bruk som node-nøkkel (unngår float-duplikater)."""
     return (round(lon, decimals), round(lat, decimals))
@@ -181,7 +182,6 @@ def build_graph(geojson_path: str | Path) -> tuple[nx.Graph, KDTree, list[tuple]
 
     # Bygg KDTree for rask nearest-neighbour-søk
     node_list = list(graph.nodes())
-    # KDTree bruker (lat, lon) for geografisk sensitivitet
     coords_array = [(lat, lon) for (lon, lat) in node_list]
     kdtree = KDTree(coords_array)
 

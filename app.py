@@ -105,6 +105,7 @@ def geocode():
                 continue
             results.append({
                 "name": a.get("adressetekst", ""),
+                "poststed": a.get("poststed", ""),
                 "municipality": a.get("kommunenavn", ""),
                 "postcode": a.get("postnummer", ""),
                 "lat": pt["lat"],
