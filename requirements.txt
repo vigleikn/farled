@@ -1,0 +1,7 @@
+flask>=3.0
+geopandas>=0.14
+networkx>=3.2
+shapely>=2.0
+requests>=2.31
+pyproj>=3.6
+scipy>=1.11

@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+venv/
+.venv/
+
+# Data (store filer — last ned med download_farled.py)
+data/*.gml
+data/*.zip
+data/*.gfs
+
+# Quay-cache regenereres automatisk ved oppstart
+data/quays_cache.json
+
+# OS
+.DS_Store
