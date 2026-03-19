@@ -220,6 +220,24 @@
     .calc-btn:not(:disabled):hover { background: #e4e4e7; }
     .calc-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
+    /* ── Reset button ── */
+    .reset-btn {
+      display: none;
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--dim);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 13px;
+      padding: 8px 0;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .reset-btn:hover { color: var(--text); border-color: var(--dim); }
+    .reset-btn.visible { display: block; }
+
     /* ── Result ── */
     .result {
       margin: 0 18px 18px;
@@ -333,6 +351,7 @@
     <button class="calc-btn" id="calc-btn" disabled>
       <span id="btn-label">Beregn sjøvei</span>
     </button>
+    <button class="reset-btn" id="reset-btn">Nullstill</button>
 
   </div>
 
@@ -378,14 +397,25 @@ let pinMarkerFrom = null, pinMarkerTo = null;
 const map = L.map('map', { center: [65.5, 14.0], zoom: 5, zoomControl: false });
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+const osmLayer = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
   maxZoom: 19,
 }).addTo(map);
 
-L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
+const sjokartLayer = L.tileLayer(
+  'https://cache.kartverket.no/v1/wmts/1.0.0/sjokartraster/default/webmercator/{z}/{y}/{x}.png',
+  { attribution: '© <a href="https://www.kartverket.no">Kartverket</a>. Ikke til navigasjon.', maxZoom: 19 }
+);
+
+const seamarkLayer = L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
   attribution: '© OpenSeaMap', opacity: 0.8, maxZoom: 18,
 }).addTo(map);
+
+L.control.layers(
+  { 'OSM Standard': osmLayer, 'Sjøkart (Kartverket)': sjokartLayer },
+  { 'Sjømerker': seamarkLayer },
+  { position: 'bottomright', collapsed: true }
+).addTo(map);
 
 map.on('zoomend', syncWaypoints);
 
@@ -481,16 +511,41 @@ function clearPoint(which) {
   if (which === 'from') {
     fromPoint = null;
     document.getElementById('from-input').classList.remove('pinned');
+    if (fromMarker) { map.removeLayer(fromMarker); fromMarker = null; }
   } else {
     toPoint = null;
     document.getElementById('to-input').classList.remove('pinned');
+    if (toMarker) { map.removeLayer(toMarker); toMarker = null; }
   }
+  // Fjern rute når et punkt ryddes
+  [routeLayer, shadowLayer].forEach(l => { if (l) map.removeLayer(l); });
+  routeLayer = shadowLayer = null;
+  waypointMarkers.forEach(m => map.removeLayer(m));
+  waypointMarkers = []; routeLatLngs = [];
+  document.getElementById('result').style.display = 'none';
   updateClearBtn(which);
   updateBtn();
 }
 
 function updateBtn() {
+  const hasAny = !!(fromPoint || toPoint);
   document.getElementById('calc-btn').disabled = !(fromPoint && toPoint);
+  document.getElementById('reset-btn').classList.toggle('visible', hasAny);
+}
+
+function resetAll() {
+  ['from', 'to'].forEach(which => {
+    document.getElementById(which + '-input').value = '';
+    document.getElementById(which + '-input').classList.remove('pinned');
+    updateClearBtn(which);
+  });
+  fromPoint = null; toPoint = null;
+  [routeLayer, shadowLayer, fromMarker, toMarker, pinMarkerFrom, pinMarkerTo].forEach(l => { if (l) map.removeLayer(l); });
+  routeLayer = shadowLayer = fromMarker = toMarker = pinMarkerFrom = pinMarkerTo = null;
+  waypointMarkers.forEach(m => map.removeLayer(m));
+  waypointMarkers = []; routeLatLngs = [];
+  document.getElementById('result').style.display = 'none';
+  updateBtn();
 }
 
 // ─── Clear buttons ────────────────────────────────────────────
@@ -502,6 +557,8 @@ function updateBtn() {
     clearPoint(which);
   });
 });
+
+document.getElementById('reset-btn').addEventListener('click', resetAll);
 
 // ─── Geocode (Kartverket) ─────────────────────────────────────
 let geocodeTimers = {};
