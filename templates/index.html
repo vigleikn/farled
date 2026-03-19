@@ -238,6 +238,32 @@
     .reset-btn:hover { color: var(--text); border-color: var(--dim); }
     .reset-btn.visible { display: block; }
 
+    /* ── Add-stop button ── */
+    .add-stop-btn {
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      color: var(--dim);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 12px;
+      padding: 6px 10px;
+      cursor: pointer;
+      width: 100%;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .add-stop-btn:hover { color: var(--text); border-color: var(--dim); }
+
+    /* ── Stop field ── */
+    .stop-field-header { display: flex; align-items: center; justify-content: space-between; }
+    .stop-remove-btn {
+      background: none; border: none; color: var(--dim);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 11px; cursor: pointer; padding: 0 2px; line-height: 1;
+      transition: color 0.12s;
+    }
+    .stop-remove-btn:hover { color: var(--error); }
+    .stop-pip.mid { background: var(--dim); }
+
     /* ── Result ── */
     .result {
       margin: 0 18px 18px;
@@ -335,6 +361,9 @@
       <button class="pin-btn" id="from-pin" title="Sett pin i kart">📍 Sett pin i kart</button>
     </div>
 
+    <div id="stops-container"></div>
+    <button class="add-stop-btn" id="add-stop-btn">&#xFF0B; Legg til mellomstopp</button>
+
     <div class="sep"></div>
 
     <div class="field">
@@ -362,16 +391,7 @@
       <span class="dist-unit">nm</span>
     </div>
     <div class="dist-km" id="dist-km"></div>
-    <div class="result-route">
-      <div class="result-stop">
-        <div class="stop-pip from"></div>
-        <div><div class="stop-label">Fra</div><div class="stop-name" id="r-from"></div></div>
-      </div>
-      <div class="result-stop">
-        <div class="stop-pip to"></div>
-        <div><div class="stop-label">Til</div><div class="stop-name" id="r-to"></div></div>
-      </div>
-    </div>
+    <div class="result-route" id="result-route"></div>
   </div>
 
   <div class="error-msg" id="error-msg"></div>
@@ -388,6 +408,7 @@
 // ─── State ────────────────────────────────────────────────────
 let allQuays = [];
 let fromPoint = null, toPoint = null;
+let stopPoints = {}, stopOrder = [], stopPinMarkers = {}, stopCounter = 0;
 let pinMode = null;
 let routeLayer = null, shadowLayer = null, fromMarker = null, toMarker = null;
 let waypointMarkers = [], routeLatLngs = [];
@@ -442,15 +463,16 @@ function setPinMode(which) {
   if (pinMode === which) {
     pinMode = null;
     map.getContainer().style.cursor = '';
-    document.getElementById('from-pin').classList.remove('active');
-    document.getElementById('to-pin').classList.remove('active');
+    document.querySelectorAll('.pin-btn').forEach(b => b.classList.remove('active'));
     return;
   }
   pinMode = which;
   map.getContainer().style.cursor = 'crosshair';
-  document.getElementById('from-pin').classList.toggle('active', which === 'from');
-  document.getElementById('to-pin').classList.toggle('active', which === 'to');
-  setStatus('ok', 'Klikk i kartet for å sette ' + (which === 'from' ? 'startpunkt' : 'endepunkt'));
+  document.querySelectorAll('.pin-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById(which + '-pin');
+  if (btn) btn.classList.add('active');
+  const label = which === 'from' ? 'startpunkt' : which === 'to' ? 'endepunkt' : 'mellomstopp';
+  setStatus('ok', 'Klikk i kartet for å sette ' + label);
 }
 
 document.getElementById('from-pin').addEventListener('click', () => setPinMode('from'));
@@ -460,51 +482,58 @@ map.on('click', e => {
   if (!pinMode) return;
   const { lat, lng } = e.latlng;
   const label = lat.toFixed(4) + ', ' + lng.toFixed(4);
+  const inputEl = document.getElementById(pinMode + '-input');
+  if (!inputEl) return;
+
+  inputEl.value = 'Pin: ' + label;
+  inputEl.classList.add('pinned');
+  setPoint(pinMode, { lat, lon: lng, name: 'Pin: ' + label });
 
   if (pinMode === 'from') {
-    setPoint('from', { lat, lon: lng, name: 'Pin: ' + label });
-    document.getElementById('from-input').value = 'Pin: ' + label;
-    document.getElementById('from-input').classList.add('pinned');
     if (pinMarkerFrom) map.removeLayer(pinMarkerFrom);
     pinMarkerFrom = L.marker([lat, lng], { icon: pinIcon('#3ecfcc') })
       .bindPopup('Fra: ' + label).addTo(map);
-
-    if (!toPoint) {
-      // Til mangler → aktiver Til-pin-modus automatisk
-      setPinMode('to');
-      setStatus('ok', 'Klikk i kartet for å sette endepunkt');
-    } else {
-      // Til finnes allerede → avslutt og beregn uten fit
-      setPinMode(null);
-      triggerCalc(false);
-    }
-
-  } else {
-    setPoint('to', { lat, lon: lng, name: 'Pin: ' + label });
-    document.getElementById('to-input').value = 'Pin: ' + label;
-    document.getElementById('to-input').classList.add('pinned');
+    if (!toPoint) { setPinMode('to'); return; }
+  } else if (pinMode === 'to') {
     if (pinMarkerTo) map.removeLayer(pinMarkerTo);
     pinMarkerTo = L.marker([lat, lng], { icon: pinIcon('#c4965a') })
       .bindPopup('Til: ' + label).addTo(map);
-
-    // Alltid avslutt og beregn etter Til, uten fit
-    setPinMode(null);
-    triggerCalc(false);
+  } else {
+    if (stopPinMarkers[pinMode]) map.removeLayer(stopPinMarkers[pinMode]);
+    stopPinMarkers[pinMode] = L.marker([lat, lng], { icon: pinIcon('#a0a0a0') })
+      .bindPopup('Stopp: ' + label).addTo(map);
   }
+
+  setPinMode(null);
+  triggerCalc(false);
 });
 
 // ─── Shared point setter ──────────────────────────────────────
 function updateClearBtn(which) {
-  const pt = which === 'from' ? fromPoint : toPoint;
-  document.getElementById(which + '-clear').classList.toggle('visible', !!pt);
-  document.getElementById(which + '-search-icon').classList.toggle('hidden', !!pt);
+  let pt;
+  if (which === 'from') pt = fromPoint;
+  else if (which === 'to') pt = toPoint;
+  else pt = stopPoints[which];
+  const clearEl = document.getElementById(which + '-clear');
+  const iconEl  = document.getElementById(which + '-search-icon');
+  if (clearEl) clearEl.classList.toggle('visible', !!pt);
+  if (iconEl)  iconEl.classList.toggle('hidden',  !!pt);
 }
 
 function setPoint(which, pt) {
   if (which === 'from') fromPoint = pt;
-  else toPoint = pt;
+  else if (which === 'to') toPoint = pt;
+  else stopPoints[which] = pt;
   updateClearBtn(which);
   updateBtn();
+}
+
+function clearRouteDisplay() {
+  [routeLayer, shadowLayer].forEach(l => { if (l) map.removeLayer(l); });
+  routeLayer = shadowLayer = null;
+  waypointMarkers.forEach(m => map.removeLayer(m));
+  waypointMarkers = []; routeLatLngs = [];
+  document.getElementById('result').style.display = 'none';
 }
 
 function clearPoint(which) {
@@ -512,29 +541,34 @@ function clearPoint(which) {
     fromPoint = null;
     document.getElementById('from-input').classList.remove('pinned');
     if (fromMarker) { map.removeLayer(fromMarker); fromMarker = null; }
-  } else {
+  } else if (which === 'to') {
     toPoint = null;
     document.getElementById('to-input').classList.remove('pinned');
     if (toMarker) { map.removeLayer(toMarker); toMarker = null; }
+  } else {
+    delete stopPoints[which];
+    const inp = document.getElementById(which + '-input');
+    if (inp) inp.classList.remove('pinned');
   }
-  // Fjern rute når et punkt ryddes
-  [routeLayer, shadowLayer].forEach(l => { if (l) map.removeLayer(l); });
-  routeLayer = shadowLayer = null;
-  waypointMarkers.forEach(m => map.removeLayer(m));
-  waypointMarkers = []; routeLatLngs = [];
-  document.getElementById('result').style.display = 'none';
+  clearRouteDisplay();
   updateClearBtn(which);
   updateBtn();
 }
 
 function updateBtn() {
-  const hasAny = !!(fromPoint || toPoint);
-  document.getElementById('calc-btn').disabled = !(fromPoint && toPoint);
+  const allStopsSet = stopOrder.every(id => !!stopPoints[id]);
+  const ready = !!(fromPoint && toPoint && allStopsSet);
+  document.getElementById('calc-btn').disabled = !ready;
+  const hasAny = !!(fromPoint || toPoint || stopOrder.length > 0);
   document.getElementById('reset-btn').classList.toggle('visible', hasAny);
 }
 
 function resetAll() {
   fromPoint = null; toPoint = null;
+  stopPoints = {}; stopOrder = [];
+  Object.values(stopPinMarkers).forEach(m => map.removeLayer(m));
+  stopPinMarkers = {};
+  document.getElementById('stops-container').innerHTML = '';
   ['from', 'to'].forEach(which => {
     document.getElementById(which + '-input').value = '';
     document.getElementById(which + '-input').classList.remove('pinned');
@@ -682,33 +716,133 @@ function makeSearch(inputId, ddId, which) {
 makeSearch('from-input', 'from-dd', 'from');
 makeSearch('to-input',   'to-dd',   'to');
 
+// ─── Mellomstopp ─────────────────────────────────────────────
+function addStop() {
+  const id = 'stop_' + stopCounter++;
+  stopOrder.push(id);
+
+  const el = document.createElement('div');
+  el.className = 'field';
+  el.dataset.stopId = id;
+
+  const header = document.createElement('div');
+  header.className = 'stop-field-header';
+  const lbl = document.createElement('label');
+  lbl.className = 'field-label';
+  lbl.textContent = 'Mellomstopp ' + stopOrder.length;
+  const removeBtn = document.createElement('button');
+  removeBtn.className = 'stop-remove-btn';
+  removeBtn.title = 'Fjern stopp';
+  removeBtn.textContent = 'Fjern';
+  header.appendChild(lbl); header.appendChild(removeBtn);
+
+  const wrap = document.createElement('div');
+  wrap.className = 'search-wrap';
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.className = 'search-input';
+  inp.id = id + '-input'; inp.placeholder = 'S\u00F8k etter kai eller adresse\u2026';
+  inp.autocomplete = 'off';
+  const icon = document.createElement('span');
+  icon.className = 'search-icon'; icon.id = id + '-search-icon';
+  icon.textContent = '\u2315';
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'clear-btn'; clearBtn.id = id + '-clear';
+  clearBtn.title = 'Nullstill'; clearBtn.textContent = '\u2715';
+  const dd = document.createElement('div');
+  dd.className = 'dropdown'; dd.id = id + '-dd';
+  wrap.appendChild(inp); wrap.appendChild(icon);
+  wrap.appendChild(clearBtn); wrap.appendChild(dd);
+
+  const pinBtn = document.createElement('button');
+  pinBtn.className = 'pin-btn'; pinBtn.id = id + '-pin';
+  pinBtn.title = 'Sett pin i kart';
+  pinBtn.textContent = '\uD83D\uDCCD Sett pin i kart';
+
+  el.appendChild(header); el.appendChild(wrap); el.appendChild(pinBtn);
+  document.getElementById('stops-container').appendChild(el);
+
+  makeSearch(id + '-input', id + '-dd', id);
+
+  clearBtn.addEventListener('click', () => {
+    inp.value = '';
+    if (stopPinMarkers[id]) { map.removeLayer(stopPinMarkers[id]); delete stopPinMarkers[id]; }
+    clearPoint(id);
+  });
+
+  pinBtn.addEventListener('click', () => setPinMode(id));
+
+  removeBtn.addEventListener('click', () => {
+    el.remove();
+    stopOrder = stopOrder.filter(s => s !== id);
+    delete stopPoints[id];
+    if (stopPinMarkers[id]) { map.removeLayer(stopPinMarkers[id]); delete stopPinMarkers[id]; }
+    relabelStops();
+    clearRouteDisplay();
+    updateBtn();
+  });
+
+  updateBtn();
+}
+
+function relabelStops() {
+  stopOrder.forEach((id, i) => {
+    const el = document.querySelector('[data-stop-id="' + id + '"] .field-label');
+    if (el) el.textContent = 'Mellomstopp ' + (i + 1);
+  });
+}
+
+document.getElementById('add-stop-btn').addEventListener('click', addStop);
+
 // ─── Calculate ───────────────────────────────────────────────
 async function triggerCalc(fit = true) {
-  if (!fromPoint || !toPoint) return;
+  const legs = [fromPoint, ...stopOrder.map(id => stopPoints[id]), toPoint];
+  if (legs.some(p => !p)) return;
+
   const btn = document.getElementById('calc-btn');
   btn.disabled = true;
   document.getElementById('btn-label').textContent = 'Beregner…';
   hideResult(); hideError();
 
   try {
-    const r = await fetch('/api/route', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from_lat: fromPoint.lat, from_lon: fromPoint.lon, from_name: fromPoint.name,
-        to_lat:   toPoint.lat,   to_lon:   toPoint.lon,   to_name:   toPoint.name,
-      }),
-    });
-    const data = await r.json();
-    if (!r.ok) { showError(data.error || 'Ukjent feil'); return; }
-    showResult(data);
-    drawRoute(data, fit);
+    let allWaypoints = [];
+    let totalNm = 0, totalKm = 0;
+
+    for (let i = 0; i < legs.length - 1; i++) {
+      const from = legs[i], to = legs[i + 1];
+      const r = await fetch('/api/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from_lat: from.lat, from_lon: from.lon, from_name: from.name,
+          to_lat:   to.lat,   to_lon:   to.lon,   to_name:   to.name,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) { showError(data.error || 'Ukjent feil'); return; }
+      totalNm += data.distance_nm;
+      totalKm += data.distance_km;
+      allWaypoints = i === 0 ? data.waypoints : allWaypoints.concat(data.waypoints.slice(1));
+    }
+
+    const merged = {
+      from_name:  legs[0].name,
+      to_name:    legs[legs.length - 1].name,
+      stop_names: legs.slice(1, -1).map(p => p.name),
+      distance_nm: Math.round(totalNm * 10) / 10,
+      distance_km: Math.round(totalKm * 10) / 10,
+      waypoints:   allWaypoints,
+    };
+
+    showResult(merged);
+    drawRoute(merged, fit);
     if (pinMarkerFrom) { map.removeLayer(pinMarkerFrom); pinMarkerFrom = null; }
     if (pinMarkerTo)   { map.removeLayer(pinMarkerTo);   pinMarkerTo   = null; }
+    Object.values(stopPinMarkers).forEach(m => map.removeLayer(m));
+    stopPinMarkers = {};
   } catch (e) {
     showError('Nettverksfeil: ' + e.message);
   } finally {
-    btn.disabled = !(fromPoint && toPoint);
+    btn.disabled = !(fromPoint && toPoint && stopOrder.every(id => !!stopPoints[id]));
     document.getElementById('btn-label').textContent = 'Beregn sjøvei';
   }
 }
@@ -718,9 +852,30 @@ document.getElementById('calc-btn').addEventListener('click', triggerCalc);
 // ─── Result/Error display ────────────────────────────────────
 function showResult(data) {
   document.getElementById('dist-nm').textContent = data.distance_nm.toFixed(1);
-  document.getElementById('dist-km').textContent = '≈ ' + data.distance_km + ' km langs farled';
-  document.getElementById('r-from').textContent = data.from_name;
-  document.getElementById('r-to').textContent   = data.to_name;
+  document.getElementById('dist-km').textContent = '\u2248 ' + data.distance_km + ' km langs farled';
+
+  const route = document.getElementById('result-route');
+  while (route.firstChild) route.removeChild(route.firstChild);
+
+  const allNames = [data.from_name, ...(data.stop_names || []), data.to_name];
+  allNames.forEach((name, i) => {
+    const isFirst = i === 0, isLast = i === allNames.length - 1;
+    const stopEl = document.createElement('div');
+    stopEl.className = 'result-stop';
+    const pip = document.createElement('div');
+    pip.className = 'stop-pip ' + (isFirst ? 'from' : isLast ? 'to' : 'mid');
+    const info = document.createElement('div');
+    const lbl = document.createElement('div');
+    lbl.className = 'stop-label';
+    lbl.textContent = isFirst ? 'Fra' : isLast ? 'Til' : 'Via';
+    const nm = document.createElement('div');
+    nm.className = 'stop-name';
+    nm.textContent = name;
+    info.appendChild(lbl); info.appendChild(nm);
+    stopEl.appendChild(pip); stopEl.appendChild(info);
+    route.appendChild(stopEl);
+  });
+
   document.getElementById('result').classList.add('show');
 }
 function hideResult() { document.getElementById('result').classList.remove('show'); }
