@@ -534,12 +534,12 @@ function updateBtn() {
 }
 
 function resetAll() {
+  fromPoint = null; toPoint = null;
   ['from', 'to'].forEach(which => {
     document.getElementById(which + '-input').value = '';
     document.getElementById(which + '-input').classList.remove('pinned');
     updateClearBtn(which);
   });
-  fromPoint = null; toPoint = null;
   [routeLayer, shadowLayer, fromMarker, toMarker, pinMarkerFrom, pinMarkerTo].forEach(l => { if (l) map.removeLayer(l); });
   routeLayer = shadowLayer = fromMarker = toMarker = pinMarkerFrom = pinMarkerTo = null;
   waypointMarkers.forEach(m => map.removeLayer(m));
