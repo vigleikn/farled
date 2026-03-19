@@ -365,6 +365,8 @@ L.tileLayer('https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png', {
   attribution: '© OpenSeaMap', opacity: 0.8, maxZoom: 18,
 }).addTo(map);
 
+map.on('zoomend', syncWaypoints);
+
 // ─── Status ──────────────────────────────────────────────────
 function setStatus(state, text) {
   document.getElementById('spip').className = 'spip ' + state;
@@ -406,6 +408,7 @@ map.on('click', e => {
   if (!pinMode) return;
   const { lat, lng } = e.latlng;
   const label = lat.toFixed(4) + ', ' + lng.toFixed(4);
+
   if (pinMode === 'from') {
     setPoint('from', { lat, lon: lng, name: 'Pin: ' + label });
     document.getElementById('from-input').value = 'Pin: ' + label;
@@ -413,6 +416,17 @@ map.on('click', e => {
     if (pinMarkerFrom) map.removeLayer(pinMarkerFrom);
     pinMarkerFrom = L.marker([lat, lng], { icon: pinIcon('#3ecfcc') })
       .bindPopup('Fra: ' + label).addTo(map);
+
+    if (!toPoint) {
+      // Til mangler → aktiver Til-pin-modus automatisk
+      setPinMode('to');
+      setStatus('ok', 'Klikk i kartet for å sette endepunkt');
+    } else {
+      // Til finnes allerede → avslutt og beregn
+      setPinMode(null);
+      triggerCalc();
+    }
+
   } else {
     setPoint('to', { lat, lon: lng, name: 'Pin: ' + label });
     document.getElementById('to-input').value = 'Pin: ' + label;
@@ -420,8 +434,11 @@ map.on('click', e => {
     if (pinMarkerTo) map.removeLayer(pinMarkerTo);
     pinMarkerTo = L.marker([lat, lng], { icon: pinIcon('#c4965a') })
       .bindPopup('Til: ' + label).addTo(map);
+
+    // Alltid avslutt og beregn etter Til
+    setPinMode(null);
+    triggerCalc();
   }
-  setPinMode(null);
 });
 
 // ─── Shared point setter ──────────────────────────────────────
@@ -569,7 +586,7 @@ makeSearch('from-input', 'from-dd', 'from');
 makeSearch('to-input',   'to-dd',   'to');
 
 // ─── Calculate ───────────────────────────────────────────────
-document.getElementById('calc-btn').addEventListener('click', async () => {
+async function triggerCalc() {
   if (!fromPoint || !toPoint) return;
   const btn = document.getElementById('calc-btn');
   btn.disabled = true;
@@ -597,7 +614,9 @@ document.getElementById('calc-btn').addEventListener('click', async () => {
     btn.disabled = !(fromPoint && toPoint);
     document.getElementById('btn-label').textContent = 'Beregn sjøvei';
   }
-});
+}
+
+document.getElementById('calc-btn').addEventListener('click', triggerCalc);
 
 // ─── Result/Error display ────────────────────────────────────
 function showResult(data) {
@@ -616,9 +635,9 @@ function showError(msg) {
 function hideError() { document.getElementById('error-msg').classList.remove('show'); }
 
 // ─── Map drawing ─────────────────────────────────────────────
-function pipIcon(color) {
+function pipIcon() {
   return L.divIcon({
-    html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 0 8px ${color};cursor:grab;box-sizing:border-box"></div>`,
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:#fff;cursor:grab;box-sizing:border-box;box-shadow:0 1px 4px rgba(0,0,0,0.35)"></div>`,
     className: '',
     iconSize: [22, 22],
     iconAnchor: [11, 11],
@@ -652,11 +671,21 @@ function updateDistance() {
   document.getElementById('dist-km').textContent = '≈ ' + (total * 1.852).toFixed(1) + ' km';
 }
 
+const WP_ZOOM_MIN = 10;
+
 const wpIcon = L.divIcon({
   className: '',
-  html: `<div style="width:10px;height:10px;border-radius:50%;background:#1a1a1a;border:2px solid #3ecfcc;cursor:grab;margin:-5px 0 0 -5px"></div>`,
+  html: `<div style="width:10px;height:10px;border-radius:50%;background:#fff;cursor:grab;margin:-5px 0 0 -5px;box-shadow:0 1px 3px rgba(0,0,0,0.4)"></div>`,
   iconSize: [0, 0],
 });
+
+function syncWaypoints() {
+  const visible = map.getZoom() >= WP_ZOOM_MIN;
+  waypointMarkers.forEach(m => {
+    if (visible && !map.hasLayer(m)) m.addTo(map);
+    else if (!visible && map.hasLayer(m)) map.removeLayer(m);
+  });
+}
 
 function drawRoute(data) {
   [routeLayer, shadowLayer, fromMarker, toMarker].forEach(l => { if (l) map.removeLayer(l); });
@@ -666,13 +695,13 @@ function drawRoute(data) {
   // Build mutable latlngs from waypoints [[lon,lat],...]
   routeLatLngs = data.waypoints.map(wp => [wp[1], wp[0]]);
 
-  shadowLayer = L.polyline(routeLatLngs, { color: '#3ecfcc', weight: 10, opacity: 0.12, lineCap: 'round' }).addTo(map);
-  routeLayer  = L.polyline(routeLatLngs, { color: '#3ecfcc', weight: 3, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+  shadowLayer = L.polyline(routeLatLngs, { color: '#22c55e', weight: 10, opacity: 0.15, lineCap: 'round' }).addTo(map);
+  routeLayer  = L.polyline(routeLatLngs, { color: '#22c55e', weight: 3, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(map);
 
-  // Draggable intermediate waypoints
+  // Draggable intermediate waypoints (created but not added — syncWaypoints handles visibility)
   for (let i = 1; i < routeLatLngs.length - 1; i++) {
     const idx = i;
-    const m = L.marker(routeLatLngs[idx], { icon: wpIcon, draggable: true, zIndexOffset: 100 }).addTo(map);
+    const m = L.marker(routeLatLngs[idx], { icon: wpIcon, draggable: true, zIndexOffset: 100 });
     m.on('dragstart', () => map.dragging.disable());
     m.on('drag', () => {
       const ll = m.getLatLng();
@@ -686,8 +715,8 @@ function drawRoute(data) {
   }
 
   const lastIdx = routeLatLngs.length - 1;
-  function makeDraggableEndpoint(latlng, color, name, idx) {
-    const m = L.marker(latlng, { icon: pipIcon(color), draggable: true, zIndexOffset: 200 }).bindPopup(name).addTo(map);
+  function makeDraggableEndpoint(latlng, name, idx) {
+    const m = L.marker(latlng, { icon: pipIcon(), draggable: true, zIndexOffset: 200 }).bindPopup(name).addTo(map);
     m.on('dragstart', () => map.dragging.disable());
     m.on('drag', () => {
       const ll = m.getLatLng();
@@ -700,10 +729,11 @@ function drawRoute(data) {
     return m;
   }
 
-  fromMarker = makeDraggableEndpoint(routeLatLngs[0], '#3ecfcc', data.from_name, 0);
-  toMarker   = makeDraggableEndpoint(routeLatLngs[lastIdx], '#c4965a', data.to_name, lastIdx);
+  fromMarker = makeDraggableEndpoint(routeLatLngs[0], data.from_name, 0);
+  toMarker   = makeDraggableEndpoint(routeLatLngs[lastIdx], data.to_name, lastIdx);
 
   map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+  syncWaypoints();
 }
 
 // ─── Init ────────────────────────────────────────────────────
