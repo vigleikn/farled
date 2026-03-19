@@ -41,7 +41,7 @@
       width: 288px;
       max-height: calc(100vh - 32px);
       overflow-y: auto;
-      background: rgba(9, 9, 11, 0.92);
+      background: rgba(9, 9, 11, 0.75);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border: 1px solid var(--border);
@@ -88,7 +88,7 @@
     }
 
     /* ── Input ── */
-    .search-wrap { position: relative; }
+    .search-wrap { position: relative; flex: 1; }
 
     .search-input {
       width: 100%;
@@ -96,7 +96,7 @@
       border: 1px solid var(--input-bd);
       border-radius: 8px;
       color: var(--text);
-      padding: 9px 34px 9px 12px;
+      padding: 9px 12px;
       font-family: 'Inter', system-ui, sans-serif;
       font-size: 13px;
       outline: none;
@@ -110,53 +110,36 @@
     .search-input::placeholder { color: var(--dim); }
     .search-input.pinned { border-color: var(--accent); color: var(--accent); }
 
-    .search-icon {
-      position: absolute;
-      right: 10px; top: 50%;
-      transform: translateY(-50%);
-      color: var(--dim);
-      font-size: 14px;
-      pointer-events: none;
-      transition: opacity 0.1s;
+    /* ── Inline input row ── */
+    .input-row {
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
     }
-    .search-icon.hidden { opacity: 0; pointer-events: none; }
 
-    .clear-btn {
-      display: none;
-      position: absolute;
-      right: 8px; top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      color: var(--dim);
-      font-size: 16px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 2px 4px;
-      border-radius: 4px;
-      transition: color 0.12s;
-    }
-    .clear-btn:hover { color: var(--text); }
-    .clear-btn.visible { display: block; }
-
-    /* ── Pin button (standalone, below input) ── */
-    .pin-btn {
+    /* ── Inline square buttons ── */
+    .inline-btn {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
       display: flex;
       align-items: center;
-      gap: 6px;
-      background: transparent;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      justify-content: center;
+      background: var(--surface);
+      border: 1px solid var(--input-bd);
+      border-radius: 8px;
       color: var(--dim);
-      font-family: 'Inter', system-ui, sans-serif;
-      font-size: 12px;
-      padding: 5px 10px;
       cursor: pointer;
+      font-size: 14px;
       transition: color 0.15s, border-color 0.15s, background 0.15s;
-      width: fit-content;
+      -webkit-appearance: none;
     }
-    .pin-btn:hover { color: var(--accent); border-color: var(--accent); background: rgba(62,207,204,0.06); }
-    .pin-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(62,207,204,0.1); }
+    .inline-btn:hover { color: var(--text); border-color: var(--dim); }
+    .inline-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(62,207,204,0.1); }
+
+    /* Clear button hidden by default, visible when point is set */
+    .inline-clear { display: none; }
+    .inline-clear.visible { display: flex; }
 
     /* ── Separator ── */
     .sep { height: 1px; background: var(--border); }
@@ -351,29 +334,29 @@
   <div class="card-body">
 
     <div class="field">
-      <label class="field-label">Fra kai</label>
-      <div class="search-wrap">
-        <input type="text" class="search-input" id="from-input" placeholder="Søk etter kai eller adresse…" autocomplete="off"/>
-        <span class="search-icon" id="from-search-icon">⌕</span>
-        <button class="clear-btn" id="from-clear" title="Nullstill">✕</button>
-        <div class="dropdown" id="from-dd"></div>
+      <label class="field-label">Fra</label>
+      <div class="input-row">
+        <div class="search-wrap">
+          <input type="text" class="search-input" id="from-input" placeholder="Søk etter kai eller adresse…" autocomplete="off"/>
+          <div class="dropdown" id="from-dd"></div>
+        </div>
+        <button class="inline-btn pin-btn" id="from-pin" title="Sett pin i kart">📍</button>
+        <button class="inline-btn inline-clear" id="from-clear" title="Fjern">✕</button>
       </div>
-      <button class="pin-btn" id="from-pin" title="Sett pin i kart">📍 Sett pin i kart</button>
     </div>
 
     <div id="stops-container"></div>
 
-    <div class="sep"></div>
-
     <div class="field">
-      <label class="field-label">Til kai</label>
-      <div class="search-wrap">
-        <input type="text" class="search-input" id="to-input" placeholder="Søk etter kai eller adresse…" autocomplete="off"/>
-        <span class="search-icon" id="to-search-icon">⌕</span>
-        <button class="clear-btn" id="to-clear" title="Nullstill">✕</button>
-        <div class="dropdown" id="to-dd"></div>
+      <label class="field-label">Til</label>
+      <div class="input-row">
+        <div class="search-wrap">
+          <input type="text" class="search-input" id="to-input" placeholder="Søk etter kai eller adresse…" autocomplete="off"/>
+          <div class="dropdown" id="to-dd"></div>
+        </div>
+        <button class="inline-btn pin-btn" id="to-pin" title="Sett pin i kart">📍</button>
+        <button class="inline-btn inline-clear" id="to-clear" title="Fjern">✕</button>
       </div>
-      <button class="pin-btn" id="to-pin" title="Sett pin i kart">📍 Sett pin i kart</button>
     </div>
 
     <button class="add-stop-btn" id="add-stop-btn">&#xFF0B; Legg til mellomstopp</button>
@@ -516,9 +499,7 @@ function updateClearBtn(which) {
   else if (which === 'to') pt = toPoint;
   else pt = stopPoints[which];
   const clearEl = document.getElementById(which + '-clear');
-  const iconEl  = document.getElementById(which + '-search-icon');
   if (clearEl) clearEl.classList.toggle('visible', !!pt);
-  if (iconEl)  iconEl.classList.toggle('hidden',  !!pt);
 }
 
 function setPoint(which, pt) {
@@ -737,29 +718,31 @@ function addStop() {
   removeBtn.textContent = 'Fjern';
   header.appendChild(lbl); header.appendChild(removeBtn);
 
+  const inputRow = document.createElement('div');
+  inputRow.className = 'input-row';
+
   const wrap = document.createElement('div');
   wrap.className = 'search-wrap';
   const inp = document.createElement('input');
   inp.type = 'text'; inp.className = 'search-input';
   inp.id = id + '-input'; inp.placeholder = 'S\u00F8k etter kai eller adresse\u2026';
   inp.autocomplete = 'off';
-  const icon = document.createElement('span');
-  icon.className = 'search-icon'; icon.id = id + '-search-icon';
-  icon.textContent = '\u2315';
-  const clearBtn = document.createElement('button');
-  clearBtn.className = 'clear-btn'; clearBtn.id = id + '-clear';
-  clearBtn.title = 'Nullstill'; clearBtn.textContent = '\u2715';
   const dd = document.createElement('div');
   dd.className = 'dropdown'; dd.id = id + '-dd';
-  wrap.appendChild(inp); wrap.appendChild(icon);
-  wrap.appendChild(clearBtn); wrap.appendChild(dd);
+  wrap.appendChild(inp); wrap.appendChild(dd);
 
   const pinBtn = document.createElement('button');
-  pinBtn.className = 'pin-btn'; pinBtn.id = id + '-pin';
+  pinBtn.className = 'inline-btn pin-btn'; pinBtn.id = id + '-pin';
   pinBtn.title = 'Sett pin i kart';
-  pinBtn.textContent = '\uD83D\uDCCD Sett pin i kart';
+  pinBtn.textContent = '\uD83D\uDCCD';
 
-  el.appendChild(header); el.appendChild(wrap); el.appendChild(pinBtn);
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'inline-btn inline-clear'; clearBtn.id = id + '-clear';
+  clearBtn.title = 'Fjern'; clearBtn.textContent = '\u2715';
+
+  inputRow.appendChild(wrap); inputRow.appendChild(pinBtn); inputRow.appendChild(clearBtn);
+
+  el.appendChild(header); el.appendChild(inputRow);
   document.getElementById('stops-container').appendChild(el);
 
   makeSearch(id + '-input', id + '-dd', id);
