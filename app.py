@@ -85,35 +85,89 @@ def get_quays():
 
 @app.route("/api/geocode")
 def geocode():
-    """Proxy til Kartverkets adresse-API (unngår CORS-problemer fra browser)."""
-    import urllib.request, urllib.parse
+    """Proxy til Kartverkets adresse- og stedsnavn-API."""
+    import urllib.request, urllib.parse, concurrent.futures
+
     q = request.args.get("q", "").strip()
     if len(q) < 2:
         return jsonify([])
-    url = (
-        "https://ws.geonorge.no/adresser/v1/sok?"
-        + urllib.parse.urlencode({"sok": q, "treffPerSide": "6", "utkoordsys": "4258"})
-    )
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "sjovei-poc/1.0"})
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            data = json.loads(resp.read())
-        results = []
-        for a in data.get("adresser", []):
-            pt = a.get("representasjonspunkt", {})
-            if not pt.get("lat") or not pt.get("lon"):
-                continue
-            results.append({
-                "name": a.get("adressetekst", ""),
-                "poststed": a.get("poststed", ""),
-                "municipality": a.get("kommunenavn", ""),
-                "postcode": a.get("postnummer", ""),
-                "lat": pt["lat"],
-                "lon": pt["lon"],
-            })
-        return jsonify(results)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 502
+
+    headers = {"User-Agent": "sjovei-poc/1.0"}
+
+    def fetch_steder():
+        # Relevante objekttyper (ikke individuelle adresser)
+        TYPER = {"By", "Tettsted", "Tettsteddel", "Kommune", "Bydel", "Havn", "Sted",
+                 "Annen administrativ inndeling", "Grend", "Småby"}
+        url = (
+            "https://ws.geonorge.no/stedsnavn/v1/sted?"
+            + urllib.parse.urlencode({"sok": q, "treffPerSide": "8", "utkoordsys": "4258"})
+        )
+        try:
+            with urllib.request.urlopen(
+                urllib.request.Request(url, headers=headers), timeout=5
+            ) as resp:
+                data = json.loads(resp.read())
+            out = []
+            seen = set()
+            for s in data.get("navn", []):
+                if s.get("navneobjekttype") not in TYPER:
+                    continue
+                pt = s.get("representasjonspunkt", {})
+                lat = pt.get("nord")
+                lon = pt.get("\u00f8st")   # ø
+                if not lat or not lon:
+                    continue
+                stedsnavn = s.get("stedsnavn", [])
+                name = stedsnavn[0].get("skrivem\u00e5te", "") if stedsnavn else ""
+                kommune = s.get("kommuner", [{}])[0].get("kommunenavn", "")
+                if not name or name in seen:
+                    continue
+                seen.add(name)
+                out.append({
+                    "name": name,
+                    "poststed": kommune,
+                    "municipality": "",
+                    "postcode": "",
+                    "lat": lat, "lon": lon,
+                    "is_sted": True,
+                })
+            return out
+        except:
+            return []
+
+    def fetch_adresser():
+        url = (
+            "https://ws.geonorge.no/adresser/v1/sok?"
+            + urllib.parse.urlencode({"sok": q, "treffPerSide": "5", "utkoordsys": "4258"})
+        )
+        try:
+            with urllib.request.urlopen(
+                urllib.request.Request(url, headers=headers), timeout=5
+            ) as resp:
+                data = json.loads(resp.read())
+            out = []
+            for a in data.get("adresser", []):
+                pt = a.get("representasjonspunkt", {})
+                if not pt.get("lat") or not pt.get("lon"):
+                    continue
+                out.append({
+                    "name": a.get("adressetekst", ""),
+                    "poststed": a.get("poststed", ""),
+                    "municipality": a.get("kommunenavn", ""),
+                    "postcode": a.get("postnummer", ""),
+                    "lat": pt["lat"], "lon": pt["lon"],
+                })
+            return out
+        except:
+            return []
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as ex:
+        f_steder  = ex.submit(fetch_steder)
+        f_adresse = ex.submit(fetch_adresser)
+        steder  = f_steder.result()
+        adresse = f_adresse.result()
+
+    return jsonify(steder + adresse)
 
 
 @app.route("/api/route", methods=["POST"])
