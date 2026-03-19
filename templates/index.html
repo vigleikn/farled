@@ -117,7 +117,27 @@
       color: var(--dim);
       font-size: 14px;
       pointer-events: none;
+      transition: opacity 0.1s;
     }
+    .search-icon.hidden { opacity: 0; pointer-events: none; }
+
+    .clear-btn {
+      display: none;
+      position: absolute;
+      right: 8px; top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--dim);
+      font-size: 16px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.12s;
+    }
+    .clear-btn:hover { color: var(--text); }
+    .clear-btn.visible { display: block; }
 
     /* ── Pin button (standalone, below input) ── */
     .pin-btn {
@@ -290,7 +310,8 @@
       <label class="field-label">Fra kai</label>
       <div class="search-wrap">
         <input type="text" class="search-input" id="from-input" placeholder="Søk etter kai eller adresse…" autocomplete="off"/>
-        <span class="search-icon">⌕</span>
+        <span class="search-icon" id="from-search-icon">⌕</span>
+        <button class="clear-btn" id="from-clear" title="Nullstill">✕</button>
         <div class="dropdown" id="from-dd"></div>
       </div>
       <button class="pin-btn" id="from-pin" title="Sett pin i kart">📍 Sett pin i kart</button>
@@ -302,7 +323,8 @@
       <label class="field-label">Til kai</label>
       <div class="search-wrap">
         <input type="text" class="search-input" id="to-input" placeholder="Søk etter kai eller adresse…" autocomplete="off"/>
-        <span class="search-icon">⌕</span>
+        <span class="search-icon" id="to-search-icon">⌕</span>
+        <button class="clear-btn" id="to-clear" title="Nullstill">✕</button>
         <div class="dropdown" id="to-dd"></div>
       </div>
       <button class="pin-btn" id="to-pin" title="Sett pin i kart">📍 Sett pin i kart</button>
@@ -422,9 +444,9 @@ map.on('click', e => {
       setPinMode('to');
       setStatus('ok', 'Klikk i kartet for å sette endepunkt');
     } else {
-      // Til finnes allerede → avslutt og beregn
+      // Til finnes allerede → avslutt og beregn uten fit
       setPinMode(null);
-      triggerCalc();
+      triggerCalc(false);
     }
 
   } else {
@@ -435,16 +457,23 @@ map.on('click', e => {
     pinMarkerTo = L.marker([lat, lng], { icon: pinIcon('#c4965a') })
       .bindPopup('Til: ' + label).addTo(map);
 
-    // Alltid avslutt og beregn etter Til
+    // Alltid avslutt og beregn etter Til, uten fit
     setPinMode(null);
-    triggerCalc();
+    triggerCalc(false);
   }
 });
 
 // ─── Shared point setter ──────────────────────────────────────
+function updateClearBtn(which) {
+  const pt = which === 'from' ? fromPoint : toPoint;
+  document.getElementById(which + '-clear').classList.toggle('visible', !!pt);
+  document.getElementById(which + '-search-icon').classList.toggle('hidden', !!pt);
+}
+
 function setPoint(which, pt) {
   if (which === 'from') fromPoint = pt;
   else toPoint = pt;
+  updateClearBtn(which);
   updateBtn();
 }
 
@@ -456,12 +485,23 @@ function clearPoint(which) {
     toPoint = null;
     document.getElementById('to-input').classList.remove('pinned');
   }
+  updateClearBtn(which);
   updateBtn();
 }
 
 function updateBtn() {
   document.getElementById('calc-btn').disabled = !(fromPoint && toPoint);
 }
+
+// ─── Clear buttons ────────────────────────────────────────────
+['from', 'to'].forEach(which => {
+  document.getElementById(which + '-clear').addEventListener('click', () => {
+    document.getElementById(which + '-input').value = '';
+    if (which === 'from' && pinMarkerFrom) { map.removeLayer(pinMarkerFrom); pinMarkerFrom = null; }
+    if (which === 'to'   && pinMarkerTo)   { map.removeLayer(pinMarkerTo);   pinMarkerTo   = null; }
+    clearPoint(which);
+  });
+});
 
 // ─── Geocode (Kartverket) ─────────────────────────────────────
 let geocodeTimers = {};
@@ -586,7 +626,7 @@ makeSearch('from-input', 'from-dd', 'from');
 makeSearch('to-input',   'to-dd',   'to');
 
 // ─── Calculate ───────────────────────────────────────────────
-async function triggerCalc() {
+async function triggerCalc(fit = true) {
   if (!fromPoint || !toPoint) return;
   const btn = document.getElementById('calc-btn');
   btn.disabled = true;
@@ -605,7 +645,7 @@ async function triggerCalc() {
     const data = await r.json();
     if (!r.ok) { showError(data.error || 'Ukjent feil'); return; }
     showResult(data);
-    drawRoute(data);
+    drawRoute(data, fit);
     if (pinMarkerFrom) { map.removeLayer(pinMarkerFrom); pinMarkerFrom = null; }
     if (pinMarkerTo)   { map.removeLayer(pinMarkerTo);   pinMarkerTo   = null; }
   } catch (e) {
@@ -687,7 +727,7 @@ function syncWaypoints() {
   });
 }
 
-function drawRoute(data) {
+function drawRoute(data, fit = true) {
   [routeLayer, shadowLayer, fromMarker, toMarker].forEach(l => { if (l) map.removeLayer(l); });
   waypointMarkers.forEach(m => map.removeLayer(m));
   waypointMarkers = [];
@@ -732,7 +772,7 @@ function drawRoute(data) {
   fromMarker = makeDraggableEndpoint(routeLatLngs[0], data.from_name, 0);
   toMarker   = makeDraggableEndpoint(routeLatLngs[lastIdx], data.to_name, lastIdx);
 
-  map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
+  if (fit) map.fitBounds(routeLayer.getBounds(), { padding: [50, 50] });
   syncWaypoints();
 }
 
