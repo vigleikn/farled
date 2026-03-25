@@ -2,6 +2,8 @@
 
 Beregner faktisk sjøvei mellom norske kaier langs offisielle farleder (Kystverket).
 
+**🚢 Ny funksjon:** Live Norwegian ferry positions via Barentswatch API for route planning.
+
 ## Demo
 
 Velg to kaier, søk på adresse, pin i kart eller velg aktive ferjer → kart vises med rute og distanse i nautiske mil.
@@ -73,3 +75,4 @@ python app.py
 - Basert på Kystverkets offisielle farleder — dekker ikke alle private kaier
 - Topologiske hull i farled-dataene kan gi manglende ruter på noen strekninger
 - NSR dekker kun offentlige kollektivknutepunkt (kaier/terminaler)
+# Railway deployment trigger
