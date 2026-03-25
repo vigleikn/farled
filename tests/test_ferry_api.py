@@ -471,3 +471,36 @@ BASTØ ELECTRIC, 9878993 , 257122880
             assert ferries[0]['imo'] == '9607394'
             assert ferries[0]['mmsi'] == '257741000'
             assert ferries[1]['name'] == 'BASTØ ELECTRIC'
+
+def test_refresh_ferry_positions_complete_workflow():
+    """Test complete ferry refresh from CSV to positions"""
+    csv_content = "Navn,IMO-nummer,MMSI-nummer\nBARØY,9607394,257741000\n"
+    api_vessels = [{
+        'mmsi': 257741000,
+        'latitude': 69.123,
+        'longitude': 16.456,
+        'timestamp': '2026-03-25T10:30:00Z'
+    }]
+
+    with patch('pathlib.Path.exists', return_value=True):
+        with patch('builtins.open', mock_open(read_data=csv_content)):
+            with patch('ferry_api.get_barentswatch_token', return_value='test_token'):
+                with patch('requests.get') as mock_get:
+                    mock_response = Mock()
+                    mock_response.status_code = 200
+                    mock_response.json.return_value = api_vessels
+                    mock_get.return_value = mock_response
+
+                    from ferry_api import refresh_ferry_positions
+                    positions = refresh_ferry_positions(Path("test.csv"))
+
+                    assert len(positions) == 1
+                    assert positions[0]['name'] == 'BARØY'
+                    assert positions[0]['lat'] == 69.123
+
+def test_refresh_ferry_positions_handles_token_failure():
+    """Test graceful handling when token generation fails"""
+    with patch('ferry_api.get_barentswatch_token', side_effect=ValueError("Token failed")):
+        from ferry_api import refresh_ferry_positions
+        positions = refresh_ferry_positions(Path("test.csv"))
+        assert positions == []

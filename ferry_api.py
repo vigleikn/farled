@@ -168,3 +168,32 @@ def fetch_ferry_positions(ferry_list: List[Dict[str, Any]], bearer_token: str) -
     except requests.exceptions.RequestException as e:
         print(f"[ADVARSEL] Ferry position fetch network error: {e}", file=sys.stderr)
         return []
+
+
+def refresh_ferry_positions(ferry_csv_path: Path) -> List[Dict[str, Any]]:
+    """Complete ferry position refresh workflow
+
+    Args:
+        ferry_csv_path: Path to CSV file containing ferry data
+
+    Returns:
+        List of ferry positions with current coordinates
+    """
+    try:
+        # Load ferry data from CSV
+        ferries = load_ferry_data_from_csv(ferry_csv_path)
+        if not ferries:
+            return []
+
+        # Get fresh API token
+        bearer_token = get_barentswatch_token()
+
+        # Fetch current positions
+        positions = fetch_ferry_positions(ferries, bearer_token)
+
+        print(f"Ferry position refresh: {len(positions)} ferries with current positions", file=sys.stderr)
+        return positions
+
+    except Exception as e:
+        print(f"[ADVARSEL] Ferry position refresh failed: {e}", file=sys.stderr)
+        return []
