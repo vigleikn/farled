@@ -12,10 +12,13 @@ import networkx as nx
 
 from nsr import fetch_quays, get_quays_dict
 from routing import build_graph, find_route
+from dotenv import load_dotenv
 
 # ---------------------------------------------------------------------------
 # App-konfigurasjon
 # ---------------------------------------------------------------------------
+
+load_dotenv()
 BASE_DIR = Path(__file__).parent
 FARLED_PATH = BASE_DIR / "data" / "farled.geojson"
 
