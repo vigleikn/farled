@@ -27,12 +27,13 @@ _graph = None
 _kdtree = None
 _node_list = None
 _quays_dict = {}
+_shipyards = []
 _startup_error = None
 
 
 def startup():
     """Laster farled-graf og kai-liste ved oppstart."""
-    global _graph, _kdtree, _node_list, _quays_dict, _startup_error
+    global _graph, _kdtree, _node_list, _quays_dict, _startup_error, _shipyards
 
     # --- Farled-graf ---
     try:
@@ -52,6 +53,19 @@ def startup():
     except Exception as e:
         print(f"[ADVARSEL] Kunne ikke hente kaier fra NSR: {e}", file=sys.stderr)
         _quays_dict = {}
+
+    # --- Shipyards ---
+    try:
+        shipyards_path = BASE_DIR / "data" / "shipyards.json"
+        if shipyards_path.exists():
+            with open(shipyards_path, 'r', encoding='utf-8') as f:
+                _shipyards = json.load(f)
+            print(f"Lastet {len(_shipyards)} verft fra JSON", file=sys.stderr)
+        else:
+            print("[INFO] Ingen shipyards.json funnet - verft ikke tilgjengelig", file=sys.stderr)
+    except Exception as e:
+        print(f"[ADVARSEL] Kunne ikke laste verft: {e}", file=sys.stderr)
+        _shipyards = []
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +95,12 @@ def get_quays():
     """Returnerer liste over tilgjengelige kaier for dropdown."""
     quays = sorted(_quays_dict.values(), key=lambda q: q["stop_name"])
     return jsonify(quays)
+
+
+@app.route("/api/shipyards")
+def get_shipyards():
+    """Returnerer liste over tilgjengelige verft for dropdown."""
+    return jsonify(_shipyards)
 
 
 @app.route("/api/geocode")
