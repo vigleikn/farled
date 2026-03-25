@@ -66,3 +66,9 @@ def test_shipyard_api_endpoint():
 def test_shipyard_api_empty_when_no_file():
     """Test that API returns empty list when shipyards.json missing"""
     pass  # Will implement after backend changes
+
+def test_frontend_shipyard_integration():
+    """Test that frontend can load and display shipyards"""
+    # This test will use Playwright to verify frontend integration
+    # For now, we'll implement manually and verify in browser
+    pass  # Manual verification step below

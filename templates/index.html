@@ -422,6 +422,7 @@ const appState = new SjoveiStateManager();
 
 // ─── Legacy State (for compatibility during migration) ────────────
 let allQuays = [];
+let allShipyards = [];
 let fromPoint = null, toPoint = null;
 let stopPoints = {}, stopOrder = [], stopPinMarkers = {}, stopCounter = 0;
 let pinMode = null;
@@ -458,9 +459,18 @@ map.on('zoomend', syncWaypoints);
 // ─── Quays ───────────────────────────────────────────────────
 async function loadQuays() {
   try {
-    const r = await fetch('/api/quays');
-    allQuays = await r.json();
-  } catch (e) { /* silent */ }
+    const [quaysResponse, shipyardsResponse] = await Promise.all([
+      fetch('/api/quays'),
+      fetch('/api/shipyards')
+    ]);
+
+    allQuays = await quaysResponse.json();
+    allShipyards = await shipyardsResponse.json();
+    console.log(`Loaded ${allQuays.length} quays and ${allShipyards.length} shipyards`);
+  } catch (e) {
+    console.error('Failed to load data:', e);
+    allShipyards = [];
+  }
 }
 
 // ─── Pin mode ─────────────────────────────────────────────────
@@ -723,24 +733,94 @@ function makeSearch(inputId, ddId, which) {
     return el;
   }
 
+  function buildShipyardItem(s) {
+    const el = document.createElement('div');
+    el.className = 'dd-item';
+
+    const name = document.createElement('div');
+    name.className = 'dd-item-name';
+    name.textContent = s.name;
+
+    const sub = document.createElement('div');
+    sub.className = 'dd-item-sub';
+    sub.textContent = s.city;
+
+    el.appendChild(name);
+    el.appendChild(sub);
+
+    el.addEventListener('mousedown', e => {
+      e.preventDefault();
+      inp.value = s.name;
+      inp.classList.remove('pinned');
+      setPoint(which, {
+        lat: s.lat,
+        lon: s.lon,
+        name: s.name,
+        shipyard: s
+      });
+      close();
+
+      // Apply same UI cleanup fixes as other dropdown items
+      setTimeout(() => {
+        document.querySelectorAll('.dropdown.open').forEach(dd => dd.classList.remove('open'));
+        updateClearBtn(which);
+        updateBtn();
+      }, 50);
+    });
+
+    return el;
+  }
+
+  function formatFacilityName(key) {
+    const mapping = {
+      'homepage': 'Hjemmeside',
+      'postalCode': 'Postnummer',
+      'quay': 'Kai',
+      'docksDry': 'Tørrdokk',
+      'towingDockSlip': 'Slipeanlegg',
+      'docksWet': 'Våtdokk',
+      'hall': 'Hall',
+      'heatedHall': 'Oppvarmet hall',
+      'crane': 'Kran'
+    };
+    return mapping[key] || key;
+  }
+
   function render(quays, addrs) {
     while (dd.firstChild) dd.removeChild(dd.firstChild);
     const frag = document.createDocumentFragment();
     const steder  = addrs.filter(a => a.is_sted);
     const vanlige = addrs.filter(a => !a.is_sted);
+
+    // Kaier section
     if (quays.length) {
       frag.appendChild(buildSection('Kaier (NSR)'));
       quays.slice(0, 20).forEach(q => frag.appendChild(buildQuayItem(q)));
     }
+
+    // Verft section (between kaier and steder)
+    const ql = inp.value.trim().toLowerCase();
+    const shipyardMatches = allShipyards.filter(s =>
+      s.name.toLowerCase().includes(ql)
+    );
+    if (shipyardMatches.length) {
+      frag.appendChild(buildSection('Verft'));
+      shipyardMatches.slice(0, 10).forEach(s => frag.appendChild(buildShipyardItem(s)));
+    }
+
+    // Steder section
     if (steder.length) {
       frag.appendChild(buildSection('Steder'));
       steder.forEach(a => frag.appendChild(buildAddrItem(a)));
     }
+
+    // Adresser section
     if (vanlige.length) {
       frag.appendChild(buildSection('Adresser'));
       vanlige.forEach(a => frag.appendChild(buildAddrItem(a)));
     }
-    if (!quays.length && !addrs.length) { close(); return; }
+
+    if (!quays.length && !shipyardMatches.length && !addrs.length) { close(); return; }
     dd.appendChild(frag);
     dd.classList.add('open');
     focusIdx = -1;
