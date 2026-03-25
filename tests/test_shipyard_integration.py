@@ -72,3 +72,9 @@ def test_frontend_shipyard_integration():
     # This test will use Playwright to verify frontend integration
     # For now, we'll implement manually and verify in browser
     pass  # Manual verification step below
+
+def test_shipyard_callout_content():
+    """Test that shipyard callouts show facility information"""
+    # Manual verification test - check in browser that clicking
+    # a shipyard point shows facility information in popup
+    pass

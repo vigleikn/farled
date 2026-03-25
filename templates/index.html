@@ -164,6 +164,27 @@
     }
     .dd-item-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
 
+    /* ── Shipyard popup ── */
+    .shipyard-popup {
+      font-size: 12px;
+      min-width: 200px;
+      max-width: 300px;
+    }
+
+    .shipyard-popup strong {
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    .shipyard-popup a {
+      color: #3498db;
+      text-decoration: none;
+    }
+
+    .shipyard-popup a:hover {
+      text-decoration: underline;
+    }
+
     /* ── Reset button ── */
     .reset-btn {
       display: none;
@@ -563,6 +584,42 @@ function setPoint(which, pt) {
   else stopPoints[which] = pt;
 }
 
+function createShipyardPopup(pt) {
+  if (!pt || !pt.shipyard) {
+    return `Fra: ${pt ? pt.name : 'Unknown location'}`;  // Default popup for non-shipyard points
+  }
+
+  const shipyard = pt.shipyard;
+  const facilities = shipyard.facilities || {};
+
+  // Build facility information
+  const facilityEntries = Object.entries(facilities)
+    .filter(([key, value]) => {
+      // Skip empty values and main data fields
+      if (!value || value === 'No' || key === 'postalCode') return false;
+      return true;
+    })
+    .map(([key, value]) => {
+      const displayName = (typeof formatFacilityName === 'function') ? formatFacilityName(key) : key;
+      return `${displayName}: ${value}`;
+    });
+
+  const facilityInfo = facilityEntries.length > 0
+    ? `<br><br><strong>Fasiliteter:</strong><br>${facilityEntries.join('<br>')}`
+    : '';
+
+  const homepage = facilities.homepage && facilities.homepage.startsWith('http')
+    ? `<br><a href="${facilities.homepage}" target="_blank">Hjemmeside</a>`
+    : '';
+
+  return `
+    <div class="shipyard-popup">
+      <strong>${shipyard.name}</strong><br>
+      ${shipyard.address}${homepage}${facilityInfo}
+    </div>
+  `;
+}
+
 function clearRouteDisplay() {
   [routeLayer, shadowLayer].forEach(l => { if (l) map.removeLayer(l); });
   routeLayer = shadowLayer = null;
@@ -752,12 +809,31 @@ function makeSearch(inputId, ddId, which) {
       e.preventDefault();
       inp.value = s.name;
       inp.classList.remove('pinned');
-      setPoint(which, {
+      const pointData = {
         lat: s.lat,
         lon: s.lon,
         name: s.name,
         shipyard: s
-      });
+      };
+      setPoint(which, pointData);
+
+      // Create enhanced marker with facility popup
+      const popupContent = createShipyardPopup(pointData);
+
+      if (which === 'from') {
+        if (window.pinMarkerFrom) map.removeLayer(window.pinMarkerFrom);
+        window.pinMarkerFrom = L.marker([s.lat, s.lon], { icon: pinIcon('#3ecfcc') })
+          .bindPopup(popupContent).addTo(map);
+      } else if (which === 'to') {
+        if (window.pinMarkerTo) map.removeLayer(window.pinMarkerTo);
+        window.pinMarkerTo = L.marker([s.lat, s.lon], { icon: pinIcon('#c4965a') })
+          .bindPopup(popupContent).addTo(map);
+      } else {
+        if (window.stopPinMarkers[which]) map.removeLayer(window.stopPinMarkers[which]);
+        window.stopPinMarkers[which] = L.marker([s.lat, s.lon], { icon: pinIcon('#a0a0a0') })
+          .bindPopup(popupContent).addTo(map);
+      }
+
       close();
 
       // Apply same UI cleanup fixes as other dropdown items
