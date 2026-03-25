@@ -2,6 +2,7 @@
 import csv
 import os
 import requests
+from datetime import datetime, timezone
 
 def validate_mmsi(mmsi_str):
     """Validate 9-digit MMSI format"""
@@ -40,6 +41,48 @@ def get_api_headers():
     if not token:
         raise ValueError("BARENTSWATCH_API_TOKEN environment variable required")
     return {'Authorization': f'Bearer {token}'}
+
+def validate_timestamp(timestamp_str, max_age_hours=24):
+    """Validate position timestamp is within max_age_hours"""
+    if not timestamp_str:
+        return True  # Allow missing timestamps
+
+    try:
+        # Parse ISO format timestamp
+        if timestamp_str.endswith('Z'):
+            timestamp_str = timestamp_str[:-1] + '+00:00'
+
+        pos_time = datetime.fromisoformat(timestamp_str)
+        now = datetime.now(timezone.utc)
+
+        # Ensure both timestamps have timezone info
+        if pos_time.tzinfo is None:
+            pos_time = pos_time.replace(tzinfo=timezone.utc)
+
+        age_hours = (now - pos_time).total_seconds() / 3600
+        return age_hours <= max_age_hours
+    except:
+        return True  # Allow on parse errors
+
+def process_ferry_position(mmsi, api_data):
+    """Process and validate ferry position data"""
+    if not api_data or 'latitude' not in api_data or 'longitude' not in api_data:
+        return None
+
+    lat, lon = api_data['latitude'], api_data['longitude']
+    timestamp = api_data.get('timestamp')
+
+    # Validate coordinates and timestamp
+    if not validate_norwegian_waters(lat, lon):
+        return None
+    if not validate_timestamp(timestamp):
+        return None
+
+    return {
+        'lat': lat,
+        'lon': lon,
+        'timestamp': timestamp
+    }
 
 def get_single_ferry_position(mmsi):
     """Get single ferry position from Barentswatch API"""

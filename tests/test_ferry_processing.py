@@ -68,3 +68,28 @@ def test_get_single_ferry_position():
         # Restore original
         if original_get:
             scripts.process_ferries.requests.get = original_get
+
+def test_validate_timestamp():
+    from scripts.process_ferries import validate_timestamp
+    from datetime import datetime, timezone, timedelta
+
+    # Recent timestamp (should be valid)
+    recent = datetime.now(timezone.utc).isoformat()
+    assert validate_timestamp(recent, 24) == True
+
+    # Old timestamp (should be invalid)
+    old = (datetime.now(timezone.utc) - timedelta(hours=25)).isoformat()
+    assert validate_timestamp(old, 24) == False
+
+def test_process_ferry_position():
+    from scripts.process_ferries import process_ferry_position
+
+    api_data = {
+        'latitude': 59.0,
+        'longitude': 10.0,
+        'timestamp': '2026-03-25T10:00:00Z'
+    }
+
+    result = process_ferry_position("257122880", api_data)
+    assert result['lat'] == 59.0
+    assert result['lon'] == 10.0
