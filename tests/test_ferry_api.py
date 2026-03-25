@@ -1,8 +1,10 @@
 import os
+import sys
 import pytest
 from unittest.mock import Mock, patch, mock_open
 from pathlib import Path
 import requests
+import csv
 
 def test_get_barentswatch_token_success():
     """Test successful token retrieval from Barentswatch API"""
@@ -367,7 +369,7 @@ def test_load_ferry_data_from_csv():
     csv_content = """Navn,IMO-nummer,MMSI-nummer
 BARØY,9607394,257741000
 BASTØ ELECTRIC,9878993,257122880
-TEST_FERRY,,
+TEST_FERRY,,999999999999
 INVALID_FERRY,,invalid_mmsi
 """
 
@@ -382,3 +384,90 @@ INVALID_FERRY,,invalid_mmsi
             assert ferries[0]['mmsi'] == '257741000'
             assert ferries[1]['name'] == 'BASTØ ELECTRIC'
             assert ferries[1]['mmsi'] == '257122880'
+
+def test_load_ferry_data_from_csv_encoding_error():
+    """Test handling of CSV encoding errors"""
+    with patch('pathlib.Path.exists', return_value=True):
+        with patch('builtins.open', side_effect=UnicodeDecodeError(
+            'utf-8', b'', 0, 1, 'invalid start byte'
+        )):
+            from ferry_api import load_ferry_data_from_csv
+            ferries = load_ferry_data_from_csv(Path("test.csv"))
+
+            # Should return empty list, not raise an exception
+            assert ferries == []
+
+def test_load_ferry_data_from_csv_missing_columns():
+    """Test handling of CSV with missing required columns"""
+    # CSV missing MMSI-nummer column
+    csv_content = """Navn,IMO-nummer
+BARØY,9607394
+BASTØ ELECTRIC,9878993
+"""
+
+    with patch('pathlib.Path.exists', return_value=True):
+        with patch('builtins.open', mock_open(read_data=csv_content)):
+            from ferry_api import load_ferry_data_from_csv
+            ferries = load_ferry_data_from_csv(Path("test.csv"))
+
+            # Should return empty list due to missing required column
+            assert ferries == []
+
+def test_load_ferry_data_from_csv_malformed_csv():
+    """Test handling of malformed CSV structure"""
+    # Create CSV with mismatched columns
+    csv_content = """Navn,IMO-nummer,MMSI-nummer
+BARØY,9607394
+BASTØ ELECTRIC,9878993,257122880,extra_column
+"""
+
+    with patch('pathlib.Path.exists', return_value=True):
+        with patch('builtins.open', mock_open(read_data=csv_content)):
+            from ferry_api import load_ferry_data_from_csv
+            ferries = load_ferry_data_from_csv(Path("test.csv"))
+
+            # DictReader handles mismatched columns gracefully
+            # Only BASTØ ELECTRIC has valid data (name + valid MMSI)
+            assert len(ferries) == 1
+            assert ferries[0]['name'] == 'BASTØ ELECTRIC'
+
+def test_load_ferry_data_from_csv_file_not_found():
+    """Test handling of missing CSV file"""
+    with patch('pathlib.Path.exists', return_value=False):
+        from ferry_api import load_ferry_data_from_csv
+        ferries = load_ferry_data_from_csv(Path("nonexistent.csv"))
+
+        # Should return empty list when file doesn't exist
+        assert ferries == []
+
+def test_load_ferry_data_from_csv_empty_file():
+    """Test handling of empty CSV file"""
+    csv_content = """Navn,IMO-nummer,MMSI-nummer
+"""
+
+    with patch('pathlib.Path.exists', return_value=True):
+        with patch('builtins.open', mock_open(read_data=csv_content)):
+            from ferry_api import load_ferry_data_from_csv
+            ferries = load_ferry_data_from_csv(Path("test.csv"))
+
+            # Should return empty list when no data rows
+            assert ferries == []
+
+def test_load_ferry_data_from_csv_whitespace_handling():
+    """Test that whitespace is properly trimmed from fields"""
+    csv_content = """Navn,IMO-nummer,MMSI-nummer
+  BARØY  ,  9607394  ,  257741000
+BASTØ ELECTRIC, 9878993 , 257122880
+"""
+
+    with patch('pathlib.Path.exists', return_value=True):
+        with patch('builtins.open', mock_open(read_data=csv_content)):
+            from ferry_api import load_ferry_data_from_csv
+            ferries = load_ferry_data_from_csv(Path("test.csv"))
+
+            # Whitespace should be trimmed
+            assert len(ferries) == 2
+            assert ferries[0]['name'] == 'BARØY'
+            assert ferries[0]['imo'] == '9607394'
+            assert ferries[0]['mmsi'] == '257741000'
+            assert ferries[1]['name'] == 'BASTØ ELECTRIC'

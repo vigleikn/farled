@@ -83,18 +83,35 @@ def load_ferry_data_from_csv(csv_path: Path) -> List[Dict[str, Any]]:
     try:
         with open(csv_path, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
+
+            # Validate that required columns exist
+            if reader.fieldnames is None or not all(
+                col in reader.fieldnames for col in ['Navn', 'MMSI-nummer']
+            ):
+                print(
+                    f"[ADVARSEL] CSV missing required columns. Found: {reader.fieldnames}",
+                    file=sys.stderr
+                )
+                return []
+
             for row in reader:
-                name = row.get('Navn', '').strip()
-                mmsi = row.get('MMSI-nummer', '').strip()
+                name = (row.get('Navn') or '').strip()
+                mmsi = (row.get('MMSI-nummer') or '').strip()
 
                 if name and validate_mmsi(mmsi):
                     ferries.append({
                         'name': name,
-                        'imo': row.get('IMO-nummer', '').strip(),
+                        'imo': (row.get('IMO-nummer') or '').strip(),
                         'mmsi': mmsi
                     })
-    except Exception as e:
-        print(f"[ADVARSEL] Error reading ferry CSV: {e}", file=sys.stderr)
+    except UnicodeDecodeError as e:
+        print(f"[ADVARSEL] CSV encoding error: {e}", file=sys.stderr)
+        return []
+    except csv.Error as e:
+        print(f"[ADVARSEL] CSV parsing error: {e}", file=sys.stderr)
+        return []
+    except IOError as e:
+        print(f"[ADVARSEL] Error reading ferry CSV file: {e}", file=sys.stderr)
         return []
 
     return ferries
@@ -145,6 +162,9 @@ def fetch_ferry_positions(ferry_list: List[Dict[str, Any]], bearer_token: str) -
 
         return ferry_positions
 
-    except Exception as e:
-        print(f"[ADVARSEL] Ferry position fetch failed: {e}", file=sys.stderr)
+    except requests.exceptions.Timeout:
+        print(f"[ADVARSEL] Ferry position fetch timed out", file=sys.stderr)
+        return []
+    except requests.exceptions.RequestException as e:
+        print(f"[ADVARSEL] Ferry position fetch network error: {e}", file=sys.stderr)
         return []
