@@ -12,10 +12,14 @@ import networkx as nx
 
 from nsr import fetch_quays, get_quays_dict
 from routing import build_graph, find_route
+from ferry_api import refresh_ferry_positions
+from dotenv import load_dotenv
 
 # ---------------------------------------------------------------------------
 # App-konfigurasjon
 # ---------------------------------------------------------------------------
+
+load_dotenv()
 BASE_DIR = Path(__file__).parent
 FARLED_PATH = BASE_DIR / "data" / "farled.geojson"
 
@@ -68,17 +72,13 @@ def startup():
         print(f"[ADVARSEL] Kunne ikke laste verft: {e}", file=sys.stderr)
         _shipyards = []
 
-    # --- Ferries ---
+    # --- Ferries (Fresh API Data) ---
     try:
-        ferries_path = BASE_DIR / "data" / "ferries.json"
-        if ferries_path.exists():
-            with open(ferries_path, 'r', encoding='utf-8') as f:
-                _ferries = json.load(f)
-            print(f"Lastet {len(_ferries)} ferjer fra JSON", file=sys.stderr)
-        else:
-            print("[INFO] Ingen ferries.json funnet - ferjer ikke tilgjengelig", file=sys.stderr)
+        ferries_csv_path = BASE_DIR / "data" / "ferries.csv"
+        _ferries = refresh_ferry_positions(ferries_csv_path)
+        print(f"Lastet {len(_ferries)} ferjer fra Barentswatch API", file=sys.stderr)
     except Exception as e:
-        print(f"[ADVARSEL] Kunne ikke laste ferjer: {e}", file=sys.stderr)
+        print(f"[ADVARSEL] Ferry API refresh failed: {e}", file=sys.stderr)
         _ferries = []
 
 
@@ -101,6 +101,8 @@ def status():
         "nodes": _graph.number_of_nodes() if _graph else 0,
         "edges": _graph.number_of_edges() if _graph else 0,
         "quays": len(_quays_dict),
+        "ferry_count": len(_ferries),
+        "shipyards": len(_shipyards),
     })
 
 
@@ -117,12 +119,6 @@ def get_shipyards():
     return jsonify(_shipyards)
 
 
-@app.route("/api/ferries")
-def get_ferries():
-    """Returnerer liste over tilgjengelige ferjer for dropdown."""
-    return jsonify(_ferries)
-
-
 @app.route("/api/geocode")
 def geocode():
     """Proxy til Kartverkets adresse- og stedsnavn-API."""
@@ -137,8 +133,7 @@ def geocode():
     def fetch_steder():
         # Relevante objekttyper (ikke individuelle adresser)
         TYPER = {"By", "Tettsted", "Tettsteddel", "Kommune", "Bydel", "Havn", "Sted",
-                 "Annen administrativ inndeling", "Grend", "Småby", "Øy", "Øy i sjø",
-                 "Fyrstasjon", "Fyr", "Odde", "Nes", "Bukt", "Sund", "Fjord"}
+                 "Annen administrativ inndeling", "Grend", "Småby"}
         url = (
             "https://ws.geonorge.no/stedsnavn/v1/sted?"
             + urllib.parse.urlencode({"sok": q, "treffPerSide": "8", "utkoordsys": "4258"})
