@@ -1,6 +1,8 @@
 import os
 import sys
+import csv
 import requests
+from pathlib import Path
 from datetime import datetime, timezone
 from typing import List, Dict, Any
 
@@ -57,6 +59,45 @@ def get_barentswatch_token() -> str:
 def validate_norwegian_waters(lat: float, lon: float) -> bool:
     """Validate coordinates are within Norwegian waters"""
     return 58 <= lat <= 81 and 4 <= lon <= 32
+
+
+def validate_mmsi(mmsi_str: str) -> bool:
+    """Validate 9-digit MMSI format"""
+    if not mmsi_str or mmsi_str.strip() == '':
+        return False
+    try:
+        mmsi = int(mmsi_str)
+        return 100000000 <= mmsi <= 999999999
+    except ValueError:
+        return False
+
+
+def load_ferry_data_from_csv(csv_path: Path) -> List[Dict[str, Any]]:
+    """Load and validate ferry data from CSV file"""
+    ferries = []
+
+    if not csv_path.exists():
+        print(f"[ADVARSEL] Ferry CSV not found: {csv_path}", file=sys.stderr)
+        return []
+
+    try:
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                name = row.get('Navn', '').strip()
+                mmsi = row.get('MMSI-nummer', '').strip()
+
+                if name and validate_mmsi(mmsi):
+                    ferries.append({
+                        'name': name,
+                        'imo': row.get('IMO-nummer', '').strip(),
+                        'mmsi': mmsi
+                    })
+    except Exception as e:
+        print(f"[ADVARSEL] Error reading ferry CSV: {e}", file=sys.stderr)
+        return []
+
+    return ferries
 
 
 def fetch_ferry_positions(ferry_list: List[Dict[str, Any]], bearer_token: str) -> List[Dict[str, Any]]:

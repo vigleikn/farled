@@ -1,6 +1,7 @@
 import os
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, mock_open
+from pathlib import Path
 import requests
 
 def test_get_barentswatch_token_success():
@@ -359,3 +360,25 @@ def test_validate_norwegian_waters():
     assert validate_norwegian_waters(81.1, 5.0) is False  # Too north
     assert validate_norwegian_waters(60.0, 3.9) is False  # Too west
     assert validate_norwegian_waters(60.0, 32.1) is False  # Too east
+
+def test_load_ferry_data_from_csv():
+    """Test loading and processing ferry data from CSV"""
+    # Create temporary CSV content
+    csv_content = """Navn,IMO-nummer,MMSI-nummer
+BARØY,9607394,257741000
+BASTØ ELECTRIC,9878993,257122880
+TEST_FERRY,,
+INVALID_FERRY,,invalid_mmsi
+"""
+
+    with patch('pathlib.Path.exists', return_value=True):
+        with patch('builtins.open', mock_open(read_data=csv_content)):
+            from ferry_api import load_ferry_data_from_csv
+            ferries = load_ferry_data_from_csv(Path("test.csv"))
+
+            # Should only include ferries with valid MMSI
+            assert len(ferries) == 2
+            assert ferries[0]['name'] == 'BARØY'
+            assert ferries[0]['mmsi'] == '257741000'
+            assert ferries[1]['name'] == 'BASTØ ELECTRIC'
+            assert ferries[1]['mmsi'] == '257122880'
