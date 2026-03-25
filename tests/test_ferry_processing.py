@@ -21,3 +21,16 @@ def test_process_ferry_csv(tmp_path):
     assert len(ferries) == 1
     assert ferries[0]['name'] == 'Test Ferry'
     assert ferries[0]['mmsi'] == '257122880'
+
+def test_get_api_headers():
+    import os
+    from scripts.process_ferries import get_api_headers
+
+    # Test with missing token
+    os.environ.pop('BARENTSWATCH_API_TOKEN', None)
+
+    try:
+        get_api_headers()
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "BARENTSWATCH_API_TOKEN" in str(e)

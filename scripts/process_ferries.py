@@ -1,5 +1,6 @@
 # scripts/process_ferries.py
 import csv
+import os
 
 def validate_mmsi(mmsi_str):
     """Validate 9-digit MMSI format"""
@@ -31,3 +32,10 @@ def process_ferry_csv(csv_path):
                     'mmsi': mmsi
                 })
     return ferries
+
+def get_api_headers():
+    """Get API headers with authentication token"""
+    token = os.environ.get('BARENTSWATCH_API_TOKEN')
+    if not token:
+        raise ValueError("BARENTSWATCH_API_TOKEN environment variable required")
+    return {'Authorization': f'Bearer {token}'}
