@@ -6,6 +6,7 @@ korteste sjøvei mellom to koordinater via Dijkstra.
 import math
 import json
 from pathlib import Path
+from typing import Union, List, Tuple, Set
 
 import networkx as nx
 import geopandas as gpd
@@ -24,16 +25,16 @@ def geodesic_dist_nm(lon1: float, lat1: float, lon2: float, lat2: float) -> floa
 
 
 
-def _round_coord(lon: float, lat: float, decimals: int = 6) -> tuple[float, float]:
+def _round_coord(lon: float, lat: float, decimals: int = 6) -> Tuple[float, float]:
     """Avrunder koordinat for bruk som node-nøkkel (unngår float-duplikater)."""
     return (round(lon, decimals), round(lat, decimals))
 
 
 def _snap_endpoints(
-    segments: list[tuple[tuple, tuple, float]],
-    endpoint_nodes: set[tuple],
+    segments: List[Tuple[Tuple, Tuple, float]],
+    endpoint_nodes: Set[Tuple],
     snap_tolerance_deg: float = 0.035,
-) -> list[tuple[tuple, tuple, float]]:
+) -> List[Tuple[Tuple, Tuple, float]]:
     """
     Slår sammen ENDEPUNKTER (første/siste punkt per LineString) som er nærmere
     enn snap_tolerance_deg grader. Intermediære noder langs linjen røres ikke,
@@ -68,7 +69,7 @@ def _snap_endpoints(
     return snapped
 
 
-def build_graph(geojson_path: str | Path) -> tuple[nx.Graph, KDTree, list[tuple]]:
+def build_graph(geojson_path: Union[str, Path]) -> Tuple[nx.Graph, KDTree, List[Tuple]]:
     """
     Leser farled-GeoJSON og bygger en NetworkX-graf.
 
@@ -92,7 +93,7 @@ def build_graph(geojson_path: str | Path) -> tuple[nx.Graph, KDTree, list[tuple]
 
     # Samle alle rå segmenter og registrer hvilke noder som er endepunkter
     raw_segments = []
-    endpoint_nodes: set[tuple] = set()
+    endpoint_nodes: Set[Tuple] = set()
 
     for _, row in gdf.iterrows():
         geom = row.geometry
@@ -192,9 +193,9 @@ def snap_to_graph(
     lat: float,
     lon: float,
     kdtree: KDTree,
-    node_list: list[tuple],
+    node_list: List[Tuple],
     max_dist_km: float = 50.0,
-) -> tuple[float, float] | None:
+) -> Union[Tuple[float, float], None]:
     """
     Finn nærmeste farled-node til koordinat (lat, lon).
     Returnerer (lon, lat)-tupel (node-ID) eller None hvis ingen funnet innenfor max_dist_km.
@@ -256,7 +257,7 @@ def compute_route(
 def find_route(
     graph: nx.Graph,
     kdtree: KDTree,
-    node_list: list[tuple],
+    node_list: List[Tuple],
     from_lat: float,
     from_lon: float,
     to_lat: float,

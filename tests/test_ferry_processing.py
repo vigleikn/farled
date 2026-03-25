@@ -37,6 +37,8 @@ def test_get_api_headers():
 
 def test_get_single_ferry_position():
     from scripts.process_ferries import get_single_ferry_position
+    import os
+    from unittest.mock import patch
 
     # Mock response test
     class MockResponse:
@@ -47,27 +49,18 @@ def test_get_single_ferry_position():
         def json(self):
             return self._json_data
 
-    # Test with mock data
-    import scripts.process_ferries
-    original_get = scripts.process_ferries.requests.get if hasattr(scripts.process_ferries, 'requests') else None
+    # Test with mock data and environment variable
+    with patch.dict(os.environ, {'BARENTSWATCH_API_TOKEN': 'test-token'}), \
+         patch('scripts.process_ferries.requests.get') as mock_get:
 
-    def mock_get(*args, **kwargs):
-        return MockResponse(200, {
+        mock_get.return_value = MockResponse(200, {
             'latitude': 59.0,
             'longitude': 10.0,
             'timestamp': '2026-03-25T10:00:00Z'
         })
 
-    # Temporarily replace requests.get
-    if hasattr(scripts.process_ferries, 'requests'):
-        scripts.process_ferries.requests.get = mock_get
-
         result = get_single_ferry_position("257122880")
         assert result == {'latitude': 59.0, 'longitude': 10.0, 'timestamp': '2026-03-25T10:00:00Z'}
-
-        # Restore original
-        if original_get:
-            scripts.process_ferries.requests.get = original_get
 
 def test_validate_timestamp():
     from scripts.process_ferries import validate_timestamp
