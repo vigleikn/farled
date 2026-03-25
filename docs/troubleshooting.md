@@ -43,8 +43,7 @@
 ## Monitoring
 
 ### Health Check Endpoints
-- `/status` - Shows ferry count and system status
-- `/health` - Basic application health
+- `/api/status` - Shows ferry count and system status (JSON response)
 
 ### Log Analysis
 ```bash

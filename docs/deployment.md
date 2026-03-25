@@ -18,5 +18,5 @@
 
 ### Health Checks
 - App startup logs should show ferry data loading
-- Status endpoint: `/status` shows ferry count
+- Status endpoint: `/api/status` shows ferry count and system status
 - Logs accessible via Railway dashboard
