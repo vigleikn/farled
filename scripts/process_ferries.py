@@ -87,25 +87,32 @@ def process_ferry_position(mmsi, api_data):
         'timestamp': timestamp
     }
 
-def get_single_ferry_position(mmsi):
-    """Get single ferry position from Barentswatch API"""
+def get_all_vessel_positions():
+    """Get all vessel positions from Barentswatch combined endpoint"""
     try:
         headers = get_api_headers()
-        url = f"https://www.barentswatch.no/bwapi/v1/ais/latest/{mmsi}"
+        url = "https://live.ais.barentswatch.no/v1/latest/combined"
 
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=30, verify=False)
 
         if response.status_code == 401:
             raise ValueError("API authentication failed - check token")
         elif response.status_code != 200:
-            return None
+            raise ValueError(f"API request failed with status {response.status_code}")
 
         return response.json()
-    except requests.RequestException:
-        return None
+    except requests.RequestException as e:
+        raise ValueError(f"Failed to fetch vessel data: {e}")
+
+def find_ferry_in_vessels(ferry_mmsi, vessel_data):
+    """Find specific ferry in vessel data"""
+    for vessel in vessel_data:
+        if str(vessel.get('mmsi', '')) == ferry_mmsi:
+            return vessel
+    return None
 
 def main():
-    """Process ferry CSV and generate positions JSON"""
+    """Process ferry CSV and generate positions JSON using correct API"""
     csv_path = Path(__file__).parent.parent / "data" / "ferries.csv"
     json_path = Path(__file__).parent.parent / "data" / "ferries.json"
 
@@ -117,38 +124,57 @@ def main():
     ferries = process_ferry_csv(csv_path)
     print(f"Found {len(ferries)} ferries with valid MMSI numbers")
 
-    ferry_positions = []
+    try:
+        # Get all vessel positions
+        print("🔄 Fetching all vessel positions from Barentswatch...")
+        vessel_data = get_all_vessel_positions()
+        print(f"✅ Received data for {len(vessel_data)} vessels")
 
-    for ferry in ferries:
-        print(f"Getting position for {ferry['name']} (MMSI: {ferry['mmsi']})...")
-        api_data = get_single_ferry_position(ferry['mmsi'])
+        ferry_positions = []
+        ferry_mmsis = {ferry['mmsi'] for ferry in ferries if ferry['mmsi']}
 
-        if api_data:
-            position = process_ferry_position(ferry['mmsi'], api_data)
-            if position:
-                ferry_positions.append({
-                    'name': ferry['name'],
-                    'imo': ferry['imo'],
-                    'mmsi': ferry['mmsi'],
-                    'lat': position['lat'],
-                    'lon': position['lon'],
-                    'lastUpdate': position.get('timestamp')
-                })
-                print(f"  ✅ Success: {ferry['name']}")
-            else:
-                print(f"  ❌ Failed validation: {ferry['name']}")
-        else:
-            print(f"  ❌ Failed API: {ferry['name']}")
+        # Find our ferries in the vessel data
+        for vessel in vessel_data:
+            mmsi = str(vessel.get('mmsi', ''))
 
-        time.sleep(0.5)  # Rate limiting
+            if mmsi in ferry_mmsis:
+                # Find the ferry info
+                ferry = next((f for f in ferries if f['mmsi'] == mmsi), None)
+                if not ferry:
+                    continue
 
-    # Save to JSON
-    with open(json_path, 'w', encoding='utf-8') as f:
-        json.dump(ferry_positions, f, ensure_ascii=False, indent=2)
+                lat = vessel.get('latitude')
+                lon = vessel.get('longitude')
+                timestamp = vessel.get('timestamp')
 
-    print(f"\n📊 Processing complete:")
-    print(f"  ✅ Successfully processed: {len(ferry_positions)} ferries")
-    print(f"  📁 Output saved to: {json_path}")
+                if lat is not None and lon is not None:
+                    # Validate position
+                    if validate_norwegian_waters(lat, lon):
+                        ferry_positions.append({
+                            'name': ferry['name'],
+                            'imo': ferry['imo'],
+                            'mmsi': mmsi,
+                            'lat': lat,
+                            'lon': lon,
+                            'lastUpdate': timestamp
+                        })
+                        print(f"  ✅ Found: {ferry['name']} at ({lat:.4f}, {lon:.4f})")
+                    else:
+                        print(f"  ⚠️  {ferry['name']} position outside Norwegian waters")
+
+        # Save to JSON
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(ferry_positions, f, ensure_ascii=False, indent=2)
+
+        print(f"\n📊 Processing complete:")
+        print(f"  ✅ Successfully found: {len(ferry_positions)} ferries")
+        print(f"  📁 Output saved to: {json_path}")
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        # Save empty file so app doesn't crash
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump([], f)
 
 if __name__ == "__main__":
     main()

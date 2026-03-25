@@ -1,0 +1,8 @@
+{"type":"server-started","port":64660,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:64660","screen_dir":"/Users/vigleiknorheim/claude-workspace/vektor kart avstand/sjovei-demo/.superpowers/brainstorm/51624-1773865698"}
+{"type":"screen-added","file":"/Users/vigleiknorheim/claude-workspace/vektor kart avstand/sjovei-demo/.superpowers/brainstorm/51624-1773865698/design-direction.html"}
+{"source":"user-event","type":"click","text":"Sjøvei\n        Farled-kalkulator\n        Fra kai\n        Søk etter kai…\n        Til kai\n        Søk etter kai…\n        Beregn sjøvei\n      \n    \n    \n      B — Mørk nøytral\n      Shadcn dark mode. Mørk men helt uten nautisk tema.","choice":"dark-neutral","id":null,"timestamp":1773865884350}
+{"source":"user-event","type":"click","text":"Sjøvei\n        Farled-kalkulator\n        Fra kai\n        Søk etter kai…\n        Til kai\n        Søk etter kai…\n        Beregn sjøvei\n      \n    \n    \n      B — Mørk nøytral\n      Shadcn dark mode. Mørk men helt uten nautisk tema.","choice":"dark-neutral","id":null,"timestamp":1773865890693}
+{"type":"screen-added","file":"/Users/vigleiknorheim/claude-workspace/vektor kart avstand/sjovei-demo/.superpowers/brainstorm/51624-1773865698/waiting-1.html"}
+{"type":"screen-added","file":"/Users/vigleiknorheim/claude-workspace/vektor kart avstand/sjovei-demo/.superpowers/brainstorm/51624-1773865698/panel-mockup.html"}
+{"type":"screen-added","file":"/Users/vigleiknorheim/claude-workspace/vektor kart avstand/sjovei-demo/.superpowers/brainstorm/51624-1773865698/layout-floating.html"}
+{"type":"server-stopped","reason":"idle timeout"}

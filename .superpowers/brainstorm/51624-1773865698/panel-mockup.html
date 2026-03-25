@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Panel mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  body { margin: 0; background: #1c1c1e; display: flex; align-items: flex-start; justify-content: center; padding: 40px; font-family: Inter, system-ui, sans-serif; min-height: 100vh; gap: 40px; }
+
+  /* ── shadcn zinc dark panel ── */
+  .panel {
+    width: 300px;
+    background: #09090b;
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .panel-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid #27272a;
+  }
+
+  .app-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fafafa;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .app-subtitle {
+    font-size: 12px;
+    color: #71717a;
+    margin-top: 3px;
+  }
+
+  .panel-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #a1a1aa;
+  }
+
+  .input-wrap {
+    position: relative;
+  }
+
+  .input {
+    width: 100%;
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    padding: 9px 36px 9px 12px;
+    font-size: 13px;
+    color: #fafafa;
+    font-family: Inter, system-ui, sans-serif;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+  }
+
+  .input::placeholder { color: #52525b; }
+  .input:focus { border-color: #71717a; }
+
+  .input-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #52525b;
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  .separator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .separator-line { flex: 1; height: 1px; background: #27272a; }
+  .separator-dot { width: 6px; height: 6px; border-radius: 50%; background: #3f3f46; }
+
+  .btn-primary {
+    width: 100%;
+    background: #fafafa;
+    color: #09090b;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: Inter, system-ui, sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #e4e4e7; }
+
+  /* Result card */
+  .result-card {
+    background: #18181b;
+    border: 1px solid #27272a;
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .result-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
+
+  .result-distance {
+    font-size: 32px;
+    font-weight: 600;
+    color: #fafafa;
+    line-height: 1;
+  }
+
+  .result-unit {
+    font-size: 14px;
+    font-weight: 400;
+    color: #a1a1aa;
+    margin-left: 4px;
+  }
+
+  .result-km {
+    font-size: 12px;
+    color: #71717a;
+    margin-top: 4px;
+  }
+
+  .result-route {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #27272a;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .route-point {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #a1a1aa;
+  }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-from { background: #3f3f46; border: 2px solid #a1a1aa; }
+  .dot-to   { background: #a1a1aa; }
+
+  /* Annotation */
+  .note {
+    font-family: Inter, sans-serif;
+    font-size: 12px;
+    color: #6b7280;
+    max-width: 300px;
+    line-height: 1.6;
+  }
+  .note strong { color: #9ca3af; }
+</style>
+</head>
+<body>
+
+<div>
+  <div style="font-family:Inter,sans-serif;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Tomt (ingen søk)</div>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="app-title">Farled</div>
+      <div class="app-subtitle">Distanser til sjøs i Norge</div>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label class="field-label">Fra kai</label>
+        <div class="input-wrap">
+          <input class="input" placeholder="Søk etter kai eller adresse…" readonly/>
+          <span class="input-icon">⌕</span>
+        </div>
+      </div>
+      <div class="separator"><div class="separator-line"></div><div class="separator-dot"></div><div class="separator-line"></div></div>
+      <div class="field">
+        <label class="field-label">Til kai</label>
+        <div class="input-wrap">
+          <input class="input" placeholder="Søk etter kai eller adresse…" readonly/>
+          <span class="input-icon">⌕</span>
+        </div>
+      </div>
+      <button class="btn-primary" disabled style="opacity:.4;cursor:not-allowed;">Beregn sjøvei</button>
+    </div>
+  </div>
+</div>
+
+<div>
+  <div style="font-family:Inter,sans-serif;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px;">Med resultat</div>
+  <div class="panel">
+    <div class="panel-header">
+      <div class="app-title">Farled</div>
+      <div class="app-subtitle">Distanser til sjøs i Norge</div>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label class="field-label">Fra kai</label>
+        <div class="input-wrap">
+          <input class="input" value="Bergen hurtigbåtterminalen" readonly/>
+          <span class="input-icon">⌕</span>
+        </div>
+      </div>
+      <div class="separator"><div class="separator-line"></div><div class="separator-dot"></div><div class="separator-line"></div></div>
+      <div class="field">
+        <label class="field-label">Til kai</label>
+        <div class="input-wrap">
+          <input class="input" value="Florø hurtigbåtkai" readonly/>
+          <span class="input-icon">⌕</span>
+        </div>
+      </div>
+      <button class="btn-primary">Beregn sjøvei</button>
+
+      <div class="result-card">
+        <div class="result-label">Beregnet sjøvei</div>
+        <div>
+          <span class="result-distance">72.4</span><span class="result-unit">nm</span>
+        </div>
+        <div class="result-km">≈ 134 km langs farled</div>
+        <div class="result-route">
+          <div class="route-point"><div class="dot dot-from"></div>Bergen hurtigbåtterminalen</div>
+          <div class="route-point"><div class="dot dot-to"></div>Florø hurtigbåtkai</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

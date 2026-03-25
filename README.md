@@ -4,7 +4,12 @@ Beregner faktisk sjøvei mellom norske kaier langs offisielle farleder (Kystverk
 
 ## Demo
 
-Velg to kaier, søk på adresse eller pin i kart → kart vises med rute og distanse i nautiske mil.
+Velg to kaier, søk på adresse, pin i kart eller velg aktive ferjer → kart vises med rute og distanse i nautiske mil.
+
+### Nye funksjoner
+- **Ferry-integrasjon**: Velg aktive norske ferjer som startpunkt for ruteplanlegging
+- **Live posisjoner**: Ferje-posisjoner hentes fra Barentswatch AIS API
+- **Utvidet søk**: Søk på ferjenavn i tillegg til kaier og adresser
 
 ## Oppsett
 
@@ -24,7 +29,21 @@ Alternativt — kjør nedlastingsskriptet:
 python download_farled.py
 ```
 
-### 3. Start serveren
+### 3. (Valgfritt) Aktiver ferry-integrasjon
+
+For å bruke live ferry-posisjoner:
+
+```bash
+# Sett opp Barentswatch API-token
+export BARENTSWATCH_API_TOKEN="ditt_token_her"
+
+# Prosesser ferry-data
+python scripts/process_ferries.py
+```
+
+Se [docs/ferry-setup.md](docs/ferry-setup.md) for detaljert oppsett.
+
+### 4. Start serveren
 
 ```bash
 python app.py
@@ -39,6 +58,9 @@ python app.py
 | Farled senterlinjer | [Kystverket / Geonorge](https://kartkatalog.geonorge.no) | NLOD |
 | Kaier og stoppesteder | [Entur NSR](https://developer.entur.org/pages-nsr-nsr/) | Åpent |
 | Adressesøk | [Kartverket Adresse-API](https://ws.geonorge.no/adresser/v1/) | NLOD |
+| Ferry-posisjoner | [Barentswatch AIS API](https://live.ais.barentswatch.no) | Åpent* |
+
+*Krever registrering og API-token
 
 ## Teknisk stack
 

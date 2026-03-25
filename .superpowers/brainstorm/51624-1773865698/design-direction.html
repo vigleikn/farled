@@ -1,0 +1,63 @@
+<h2>Hvilket designretning for sidepanelet?</h2>
+<p class="subtitle">Alle tre bruker shadcn/ui-estetikk — ren Inter-font, ingen dekor. Klikk for å velge.</p>
+
+<div class="cards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px;">
+
+  <!-- Option A: Light -->
+  <div class="card" data-choice="light" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f9fafb;padding:16px;border-radius:6px 6px 0 0;">
+      <div style="font-family:Inter,system-ui,sans-serif;width:180px;margin:0 auto;">
+        <div style="font-size:13px;font-weight:600;color:#111;margin-bottom:2px;">Sjøvei</div>
+        <div style="font-size:10px;color:#6b7280;margin-bottom:18px;">Farled-kalkulator</div>
+        <div style="font-size:10px;color:#374151;font-weight:500;margin-bottom:4px;">Fra kai</div>
+        <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:8px 10px;font-size:11px;color:#9ca3af;margin-bottom:12px;">Søk etter kai…</div>
+        <div style="font-size:10px;color:#374151;font-weight:500;margin-bottom:4px;">Til kai</div>
+        <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:8px 10px;font-size:11px;color:#9ca3af;margin-bottom:16px;">Søk etter kai…</div>
+        <div style="background:#111;color:#fff;border-radius:6px;padding:8px;text-align:center;font-size:10px;font-weight:500;">Beregn sjøvei</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Lys</h3>
+      <p>Hvit bakgrunn, grå tekst. Lik shadcn default light mode.</p>
+    </div>
+  </div>
+
+  <!-- Option B: Dark neutral -->
+  <div class="card" data-choice="dark-neutral" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#09090b;padding:16px;border-radius:6px 6px 0 0;">
+      <div style="font-family:Inter,system-ui,sans-serif;width:180px;margin:0 auto;">
+        <div style="font-size:13px;font-weight:600;color:#fafafa;margin-bottom:2px;">Sjøvei</div>
+        <div style="font-size:10px;color:#71717a;margin-bottom:18px;">Farled-kalkulator</div>
+        <div style="font-size:10px;color:#a1a1aa;font-weight:500;margin-bottom:4px;">Fra kai</div>
+        <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:8px 10px;font-size:11px;color:#52525b;margin-bottom:12px;">Søk etter kai…</div>
+        <div style="font-size:10px;color:#a1a1aa;font-weight:500;margin-bottom:4px;">Til kai</div>
+        <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:8px 10px;font-size:11px;color:#52525b;margin-bottom:16px;">Søk etter kai…</div>
+        <div style="background:#fafafa;color:#09090b;border-radius:6px;padding:8px;text-align:center;font-size:10px;font-weight:500;">Beregn sjøvei</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Mørk nøytral</h3>
+      <p>Shadcn dark mode. Mørk men helt uten nautisk tema.</p>
+    </div>
+  </div>
+
+  <!-- Option C: Slate/system -->
+  <div class="card" data-choice="slate" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f8fafc;padding:16px;border-radius:6px 6px 0 0;">
+      <div style="font-family:Inter,system-ui,sans-serif;width:180px;margin:0 auto;">
+        <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:2px;">Sjøvei</div>
+        <div style="font-size:10px;color:#64748b;margin-bottom:18px;">Farled-kalkulator</div>
+        <div style="font-size:10px;color:#475569;font-weight:500;margin-bottom:4px;">Fra kai</div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;font-size:11px;color:#94a3b8;margin-bottom:12px;">Søk etter kai…</div>
+        <div style="font-size:10px;color:#475569;font-weight:500;margin-bottom:4px;">Til kai</div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;font-size:11px;color:#94a3b8;margin-bottom:16px;">Søk etter kai…</div>
+        <div style="background:#0f172a;color:#f8fafc;border-radius:6px;padding:8px;text-align:center;font-size:10px;font-weight:500;">Beregn sjøvei</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Slate</h3>
+      <p>Shadcn slate-palett. Lys med blågrå nyanser.</p>
+    </div>
+  </div>
+
+</div>

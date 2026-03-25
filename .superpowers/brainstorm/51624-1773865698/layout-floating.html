@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Floating layout</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  body { margin: 0; background: #1c1c1e; font-family: Inter, system-ui, sans-serif; display: flex; gap: 32px; padding: 32px; align-items: flex-start; flex-wrap: wrap; }
+
+  .label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 10px; }
+
+  /* Fake map container */
+  .map-wrap {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  .fake-map {
+    background: linear-gradient(160deg, #c8dce8 0%, #b8cfe0 40%, #a8c4d8 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7ba0b8;
+    font-size: 13px;
+  }
+
+  /* Norway coastline svg silhouette */
+  .map-label { position: absolute; bottom: 12px; right: 12px; font-size: 10px; color: rgba(0,0,0,.3); }
+
+  /* Floating card */
+  .card {
+    position: absolute;
+    background: rgba(9,9,11,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid #27272a;
+    border-radius: 12px;
+    width: 272px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+  }
+
+  .card-top-left  { top: 16px; left: 16px; }
+  .card-top-center { top: 16px; left: 50%; transform: translateX(-50%); }
+
+  .card-header { padding: 16px 16px 12px; border-bottom: 1px solid #27272a; }
+  .card-title  { font-size: 16px; font-weight: 600; color: #fafafa; }
+  .card-sub    { font-size: 11px; color: #71717a; margin-top: 2px; }
+  .card-body   { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 12px; }
+
+  .field-label { font-size: 12px; font-weight: 500; color: #a1a1aa; margin-bottom: 4px; }
+
+  .input {
+    width: 100%; background: #18181b; border: 1px solid #3f3f46;
+    border-radius: 7px; padding: 8px 10px; font-size: 12px;
+    color: #52525b; font-family: Inter, sans-serif; box-sizing: border-box;
+  }
+
+  .sep { height: 1px; background: #27272a; }
+
+  .btn {
+    width: 100%; background: #fafafa; color: #09090b; border: none;
+    border-radius: 7px; padding: 9px; font-size: 12px; font-weight: 500;
+    font-family: Inter, sans-serif;
+  }
+
+  /* Zoom controls mock */
+  .zoom {
+    position: absolute;
+    bottom: 16px; right: 16px;
+    display: flex; flex-direction: column;
+    background: rgba(9,9,11,.85);
+    border: 1px solid #27272a;
+    border-radius: 7px;
+    overflow: hidden;
+  }
+  .zoom-btn {
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: #a1a1aa; font-weight: 400;
+    border-bottom: 1px solid #27272a;
+  }
+  .zoom-btn:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- Option A: top-left -->
+<div>
+  <div class="label">A — Øverst til venstre</div>
+  <div class="map-wrap" style="width:420px;">
+    <div class="fake-map" style="width:420px;height:360px;"></div>
+    <div class="map-label">© OpenStreetMap</div>
+    <div class="card card-top-left">
+      <div class="card-header">
+        <div class="card-title">Farled</div>
+        <div class="card-sub">Distanser til sjøs i Norge</div>
+      </div>
+      <div class="card-body">
+        <div>
+          <div class="field-label">Fra kai</div>
+          <div class="input">Søk etter kai eller adresse…</div>
+        </div>
+        <div class="sep"></div>
+        <div>
+          <div class="field-label">Til kai</div>
+          <div class="input">Søk etter kai eller adresse…</div>
+        </div>
+        <button class="btn" style="opacity:.4">Beregn sjøvei</button>
+      </div>
+    </div>
+    <div class="zoom">
+      <div class="zoom-btn">+</div>
+      <div class="zoom-btn">−</div>
+    </div>
+  </div>
+</div>
+
+<!-- Option B: top-center -->
+<div>
+  <div class="label">B — Øverst i midten</div>
+  <div class="map-wrap" style="width:420px;">
+    <div class="fake-map" style="width:420px;height:360px;"></div>
+    <div class="map-label">© OpenStreetMap</div>
+    <div class="card card-top-center">
+      <div class="card-header">
+        <div class="card-title">Farled</div>
+        <div class="card-sub">Distanser til sjøs i Norge</div>
+      </div>
+      <div class="card-body">
+        <div>
+          <div class="field-label">Fra kai</div>
+          <div class="input">Søk etter kai eller adresse…</div>
+        </div>
+        <div class="sep"></div>
+        <div>
+          <div class="field-label">Til kai</div>
+          <div class="input">Søk etter kai eller adresse…</div>
+        </div>
+        <button class="btn" style="opacity:.4">Beregn sjøvei</button>
+      </div>
+    </div>
+    <div class="zoom">
+      <div class="zoom-btn">+</div>
+      <div class="zoom-btn">−</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

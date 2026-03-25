@@ -6,6 +6,7 @@ korteste sjøvei mellom to koordinater via Dijkstra.
 import math
 import json
 from pathlib import Path
+from typing import Union
 
 import networkx as nx
 import geopandas as gpd
@@ -68,7 +69,7 @@ def _snap_endpoints(
     return snapped
 
 
-def build_graph(geojson_path: str | Path) -> tuple[nx.Graph, KDTree, list[tuple]]:
+def build_graph(geojson_path: Union[str, Path]) -> tuple[nx.Graph, KDTree, list[tuple]]:
     """
     Leser farled-GeoJSON og bygger en NetworkX-graf.
 
@@ -194,7 +195,7 @@ def snap_to_graph(
     kdtree: KDTree,
     node_list: list[tuple],
     max_dist_km: float = 50.0,
-) -> tuple[float, float] | None:
+) -> Union[tuple[float, float], None]:
     """
     Finn nærmeste farled-node til koordinat (lat, lon).
     Returnerer (lon, lat)-tupel (node-ID) eller None hvis ingen funnet innenfor max_dist_km.

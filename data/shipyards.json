@@ -1,5 +1,95 @@
 [
   {
+    "name": "Båtbygg",
+    "city": "Raudeberg",
+    "address": "Skoravegen 130, 6710 Raudeberg",
+    "lat": 61.970915260747326,
+    "lon": 5.140659421045261,
+    "facilities": {
+      "homepage": "https://www.baatbygg.no/",
+      "postalCode": "6710",
+      "quay": "",
+      "docksDry": "",
+      "towingDockSlip": "",
+      "docksWet": "",
+      "hall": "Yes, W29m, D7,5m",
+      "heatedHall": "",
+      "crane": "50 og 8 ton"
+    }
+  },
+  {
+    "name": "Fosen Yards AS",
+    "city": "Rissa",
+    "address": "Kvithyllveien 171, 7100 Rissa",
+    "lat": 63.565482877731874,
+    "lon": 9.900601048349598,
+    "facilities": {
+      "homepage": "https://fosenyard.com/",
+      "postalCode": "7100",
+      "quay": "350 meter",
+      "docksDry": "Yes, 215x40 meter",
+      "towingDockSlip": "No",
+      "docksWet": "No",
+      "hall": "No",
+      "heatedHall": "No",
+      "crane": "75 tonn, 40, 25, 10"
+    }
+  },
+  {
+    "name": "Frydenbø Industri Blokken",
+    "city": "Sortland",
+    "address": "Vervveien 7, 8406 Sortland",
+    "lat": 68.60047896038839,
+    "lon": 15.381690212555615,
+    "facilities": {
+      "homepage": "https://www.frydenbo-maritime.no/yards/avdelinger/blokken",
+      "postalCode": "8406",
+      "quay": "",
+      "docksDry": "No",
+      "towingDockSlip": "Yes, 3",
+      "docksWet": "",
+      "hall": "Yes",
+      "heatedHall": "",
+      "crane": ""
+    }
+  },
+  {
+    "name": "Frydenbø Industri Øksfjord AS",
+    "city": "Øksfjorden",
+    "address": "Finnesveien 30, 9552 Øksfjorden",
+    "lat": 70.2298151392395,
+    "lon": 22.356632959601455,
+    "facilities": {
+      "homepage": "https://www.frydenbo-maritime.no/no/avdelinger/oeksfjord",
+      "postalCode": "9552",
+      "quay": "",
+      "docksDry": "No",
+      "towingDockSlip": "Yes",
+      "docksWet": "Yes",
+      "hall": "Yes",
+      "heatedHall": "Yes",
+      "crane": ""
+    }
+  },
+  {
+    "name": "GMC Yard",
+    "city": "Hundvåg(Stavanger)",
+    "address": "Nyhavnsveien 7, 4077 Hundvåg(Stavanger)",
+    "lat": 58.98596511170953,
+    "lon": 5.729603821998426,
+    "facilities": {
+      "homepage": "https://gmc.no/om-gmc/gmc-yard/",
+      "postalCode": "4077",
+      "quay": "",
+      "docksDry": "Yes, 2, 140 m and 280 m",
+      "towingDockSlip": "",
+      "docksWet": "",
+      "hall": "",
+      "heatedHall": "",
+      "crane": ""
+    }
+  },
+  {
     "name": "Harstad Mek Verksted AS (Hamek)",
     "city": "Harstad",
     "address": "Samasjøveien 26, 9404 Harstad",
@@ -44,6 +134,60 @@
     "facilities": {
       "homepage": "https://www.kvernhusvik.no/",
       "postalCode": "7250",
+      "quay": "",
+      "docksDry": "",
+      "towingDockSlip": "",
+      "docksWet": "",
+      "hall": "",
+      "heatedHall": "",
+      "crane": ""
+    }
+  },
+  {
+    "name": "Larsnes Mek Verksted AS",
+    "city": "Larsnes",
+    "address": "Larsnesvegen 119, 6084 Larsnes",
+    "lat": 62.20330745948076,
+    "lon": 5.571742289576266,
+    "facilities": {
+      "homepage": "https://www.larsnes-mek.no/",
+      "postalCode": "6084",
+      "quay": "350 meter",
+      "docksDry": "",
+      "towingDockSlip": "",
+      "docksWet": "",
+      "hall": "",
+      "heatedHall": "",
+      "crane": ""
+    }
+  },
+  {
+    "name": "Lofoten Sveiseindustri AS",
+    "city": "Svolvær",
+    "address": "Verftsgata 50, 8300 Svolvær",
+    "lat": 68.2390622882237,
+    "lon": 14.578419146203856,
+    "facilities": {
+      "homepage": "https://www.sveiseindustrien.no/",
+      "postalCode": "8300",
+      "quay": "",
+      "docksDry": "No",
+      "towingDockSlip": "Yes, 70 m",
+      "docksWet": "Yes",
+      "hall": "",
+      "heatedHall": "",
+      "crane": ""
+    }
+  },
+  {
+    "name": "Maritim Power AS",
+    "city": "Abelvær",
+    "address": "Slippvegen 9, 7950 Abelvær",
+    "lat": 64.72993205973638,
+    "lon": 11.17877473108682,
+    "facilities": {
+      "homepage": "https://www.maritimpower.no/",
+      "postalCode": "7950",
       "quay": "",
       "docksDry": "",
       "towingDockSlip": "",
@@ -108,6 +252,24 @@
     }
   },
   {
+    "name": "Myklebust Verft AS",
+    "city": "Gursken",
+    "address": "Gurskevegen 68, 6082 Gursken",
+    "lat": 62.22062493571233,
+    "lon": 5.6463931434413555,
+    "facilities": {
+      "homepage": "https://www.myklebustverft.no/",
+      "postalCode": "6082",
+      "quay": "",
+      "docksDry": "Yes",
+      "towingDockSlip": "No",
+      "docksWet": "Yes",
+      "hall": "No",
+      "heatedHall": "No",
+      "crane": ""
+    }
+  },
+  {
     "name": "O. Marhaug Slip og Mek. Verksted AS",
     "city": "Svolvær",
     "address": "Bjørnskjærveien 10, 8300 Svolvær",
@@ -134,96 +296,6 @@
     "facilities": {
       "homepage": "https://www.rorvikmarina.no/",
       "postalCode": "7900",
-      "quay": "",
-      "docksDry": "",
-      "towingDockSlip": "",
-      "docksWet": "",
-      "hall": "",
-      "heatedHall": "",
-      "crane": ""
-    }
-  },
-  {
-    "name": "Slipen Mekaniske AS",
-    "city": "Sandnessjøen",
-    "address": "Kirkeveien 1, 8800 Sandnessjøen",
-    "lat": 66.02049991226382,
-    "lon": 12.62328809722896,
-    "facilities": {
-      "homepage": "https://slipen.no/",
-      "postalCode": "8800",
-      "quay": "",
-      "docksDry": "No",
-      "towingDockSlip": "Yes, several",
-      "docksWet": "Yes",
-      "hall": "No",
-      "heatedHall": "No",
-      "crane": ""
-    }
-  },
-  {
-    "name": "Tersan Havyard Ship Technology AS",
-    "city": "Leirvik i Sogn",
-    "address": "Bøfjordvegen 260, 6953 Leirvik i Sogn",
-    "lat": 61.12339293226931,
-    "lon": 5.328484008152861,
-    "facilities": {
-      "homepage": "https://www.tersanhavyard.no/",
-      "postalCode": "6953",
-      "quay": "",
-      "docksDry": "Yes, 1",
-      "towingDockSlip": "No",
-      "docksWet": "No",
-      "hall": "Yes",
-      "heatedHall": "Yes",
-      "crane": ""
-    }
-  },
-  {
-    "name": "Tromsø Mekaniske AS",
-    "city": "Tromsø",
-    "address": "Ringvegen 111, 9018 Tromsø",
-    "lat": 69.70522836252485,
-    "lon": 19.020415810390553,
-    "facilities": {
-      "homepage": "https://www.tromsomekaniske.no/",
-      "postalCode": "9018",
-      "quay": "",
-      "docksDry": "Yes, 2, large & small",
-      "towingDockSlip": "No",
-      "docksWet": "Yes",
-      "hall": "No",
-      "heatedHall": "No",
-      "crane": ""
-    }
-  },
-  {
-    "name": "YMEK AS",
-    "city": "Lødingen",
-    "address": "Sjøvegen 38, 8410 Lødingen",
-    "lat": 68.41801142546568,
-    "lon": 15.994628425484693,
-    "facilities": {
-      "homepage": "https://www.ymek.no/",
-      "postalCode": "8410",
-      "quay": "",
-      "docksDry": "No",
-      "towingDockSlip": "No",
-      "docksWet": "Yes",
-      "hall": "No",
-      "heatedHall": "No",
-      "crane": ""
-    }
-  },
-  {
-    "name": "Maritim Power AS",
-    "city": "Abelvær",
-    "address": "Slippvegen 9, 7950 Abelvær",
-    "lat": 64.72993205973638,
-    "lon": 11.17877473108682,
-    "facilities": {
-      "homepage": "https://www.maritimpower.no/",
-      "postalCode": "7950",
       "quay": "",
       "docksDry": "",
       "towingDockSlip": "",
@@ -270,56 +342,20 @@
     }
   },
   {
-    "name": "Westcon Yard Florø",
-    "city": "Florø",
-    "address": "Ole Aaserudgate 7, 6900 Florø",
-    "lat": 61.6015865773164,
-    "lon": 5.048484771404705,
+    "name": "Slipen Mekaniske AS",
+    "city": "Sandnessjøen",
+    "address": "Kirkeveien 1, 8800 Sandnessjøen",
+    "lat": 66.02049991226382,
+    "lon": 12.62328809722896,
     "facilities": {
-      "homepage": "https://www.westcon.no/selskap/westcon-yards/anlegg#floro",
-      "postalCode": "6900",
-      "quay": "",
-      "docksDry": "Yes, large",
-      "towingDockSlip": "No",
-      "docksWet": "No",
-      "hall": "Yes",
-      "heatedHall": "Yes",
-      "crane": ""
-    }
-  },
-  {
-    "name": "Frydenbø Industri Blokken",
-    "city": "Sortland",
-    "address": "Vervveien 7, 8406 Sortland",
-    "lat": 68.60047896038839,
-    "lon": 15.381690212555615,
-    "facilities": {
-      "homepage": "https://www.frydenbo-maritime.no/yards/avdelinger/blokken",
-      "postalCode": "8406",
+      "homepage": "https://slipen.no/",
+      "postalCode": "8800",
       "quay": "",
       "docksDry": "No",
-      "towingDockSlip": "Yes, 3",
-      "docksWet": "",
-      "hall": "Yes",
-      "heatedHall": "",
-      "crane": ""
-    }
-  },
-  {
-    "name": "Frydenbø Industri Øksfjord AS",
-    "city": "Øksfjorden",
-    "address": "Finnesveien 30, 9552 Øksfjorden",
-    "lat": 70.2298151392395,
-    "lon": 22.356632959601455,
-    "facilities": {
-      "homepage": "https://www.frydenbo-maritime.no/no/avdelinger/oeksfjord",
-      "postalCode": "9552",
-      "quay": "",
-      "docksDry": "No",
-      "towingDockSlip": "Yes",
+      "towingDockSlip": "Yes, several",
       "docksWet": "Yes",
-      "hall": "Yes",
-      "heatedHall": "Yes",
+      "hall": "No",
+      "heatedHall": "No",
       "crane": ""
     }
   },
@@ -334,6 +370,42 @@
       "postalCode": "6393",
       "quay": "",
       "docksDry": "Yes, 2, 100 m and 60 m",
+      "towingDockSlip": "No",
+      "docksWet": "Yes",
+      "hall": "No",
+      "heatedHall": "No",
+      "crane": ""
+    }
+  },
+  {
+    "name": "Tersan Havyard Ship Technology AS",
+    "city": "Leirvik i Sogn",
+    "address": "Bøfjordvegen 260, 6953 Leirvik i Sogn",
+    "lat": 61.12339293226931,
+    "lon": 5.328484008152861,
+    "facilities": {
+      "homepage": "https://www.tersanhavyard.no/",
+      "postalCode": "6953",
+      "quay": "",
+      "docksDry": "Yes, 1",
+      "towingDockSlip": "No",
+      "docksWet": "No",
+      "hall": "Yes",
+      "heatedHall": "Yes",
+      "crane": ""
+    }
+  },
+  {
+    "name": "Tromsø Mekaniske AS",
+    "city": "Tromsø",
+    "address": "Ringvegen 111, 9018 Tromsø",
+    "lat": 69.70522836252485,
+    "lon": 19.020415810390553,
+    "facilities": {
+      "homepage": "https://www.tromsomekaniske.no/",
+      "postalCode": "9018",
+      "quay": "",
+      "docksDry": "Yes, 2, large & small",
       "towingDockSlip": "No",
       "docksWet": "Yes",
       "hall": "No",
@@ -360,88 +432,34 @@
     }
   },
   {
-    "name": "Båtbygg",
-    "city": "Raudeberg",
-    "address": "Skoravegen 130, 6710 Raudeberg",
-    "lat": 61.970915260747326,
-    "lon": 5.140659421045261,
+    "name": "Westcon Yard Florø",
+    "city": "Florø",
+    "address": "Ole Aaserudgate 7, 6900 Florø",
+    "lat": 61.6015865773164,
+    "lon": 5.048484771404705,
     "facilities": {
-      "homepage": "https://www.baatbygg.no/",
-      "postalCode": "6710",
+      "homepage": "https://www.westcon.no/selskap/westcon-yards/anlegg#floro",
+      "postalCode": "6900",
       "quay": "",
-      "docksDry": "",
-      "towingDockSlip": "",
-      "docksWet": "",
-      "hall": "Yes, W29m, D7,5m",
-      "heatedHall": "",
-      "crane": "50 og 8 ton"
-    }
-  },
-  {
-    "name": "GMC Yard",
-    "city": "Hundvåg(Stavanger)",
-    "address": "Nyhavnsveien 7, 4077 Hundvåg(Stavanger)",
-    "lat": 58.98596511170953,
-    "lon": 5.729603821998426,
-    "facilities": {
-      "homepage": "https://gmc.no/om-gmc/gmc-yard/",
-      "postalCode": "4077",
-      "quay": "",
-      "docksDry": "Yes, 2, 140 m and 280 m",
-      "towingDockSlip": "",
-      "docksWet": "",
-      "hall": "",
-      "heatedHall": "",
+      "docksDry": "Yes, large",
+      "towingDockSlip": "No",
+      "docksWet": "No",
+      "hall": "Yes",
+      "heatedHall": "Yes",
       "crane": ""
     }
   },
   {
-    "name": "Larsnes Mek Verksted AS",
-    "city": "Larsnes",
-    "address": "Larsnesvegen 119, 6084 Larsnes",
-    "lat": 62.20330745948076,
-    "lon": 5.571742289576266,
+    "name": "YMEK AS",
+    "city": "Lødingen",
+    "address": "Sjøvegen 38, 8410 Lødingen",
+    "lat": 68.41801142546568,
+    "lon": 15.994628425484693,
     "facilities": {
-      "homepage": "https://www.larsnes-mek.no/",
-      "postalCode": "6084",
-      "quay": "350 meter",
-      "docksDry": "",
-      "towingDockSlip": "",
-      "docksWet": "",
-      "hall": "",
-      "heatedHall": "",
-      "crane": ""
-    }
-  },
-  {
-    "name": "Lofoten Sveiseindustri AS",
-    "city": "Svolvær",
-    "address": "Verftsgata 50, 8300 Svolvær",
-    "lat": 68.2390622882237,
-    "lon": 14.578419146203856,
-    "facilities": {
-      "homepage": "https://www.sveiseindustrien.no/",
-      "postalCode": "8300",
+      "homepage": "https://www.ymek.no/",
+      "postalCode": "8410",
       "quay": "",
       "docksDry": "No",
-      "towingDockSlip": "Yes, 70 m",
-      "docksWet": "Yes",
-      "hall": "",
-      "heatedHall": "",
-      "crane": ""
-    }
-  },
-  {
-    "name": "Myklebust Verft AS",
-    "city": "Gursken",
-    "address": "Gurskevegen 68, 6082 Gursken",
-    "lat": 62.22062493571233,
-    "lon": 5.6463931434413555,
-    "facilities": {
-      "homepage": "https://www.myklebustverft.no/",
-      "postalCode": "6082",
-      "quay": "",
-      "docksDry": "Yes",
       "towingDockSlip": "No",
       "docksWet": "Yes",
       "hall": "No",

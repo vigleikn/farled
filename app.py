@@ -28,12 +28,13 @@ _kdtree = None
 _node_list = None
 _quays_dict = {}
 _shipyards = []
+_ferries = []
 _startup_error = None
 
 
 def startup():
     """Laster farled-graf og kai-liste ved oppstart."""
-    global _graph, _kdtree, _node_list, _quays_dict, _startup_error, _shipyards
+    global _graph, _kdtree, _node_list, _quays_dict, _startup_error, _shipyards, _ferries
 
     # --- Farled-graf ---
     try:
@@ -66,6 +67,19 @@ def startup():
     except Exception as e:
         print(f"[ADVARSEL] Kunne ikke laste verft: {e}", file=sys.stderr)
         _shipyards = []
+
+    # --- Ferries ---
+    try:
+        ferries_path = BASE_DIR / "data" / "ferries.json"
+        if ferries_path.exists():
+            with open(ferries_path, 'r', encoding='utf-8') as f:
+                _ferries = json.load(f)
+            print(f"Lastet {len(_ferries)} ferjer fra JSON", file=sys.stderr)
+        else:
+            print("[INFO] Ingen ferries.json funnet - ferjer ikke tilgjengelig", file=sys.stderr)
+    except Exception as e:
+        print(f"[ADVARSEL] Kunne ikke laste ferjer: {e}", file=sys.stderr)
+        _ferries = []
 
 
 # ---------------------------------------------------------------------------
@@ -103,6 +117,12 @@ def get_shipyards():
     return jsonify(_shipyards)
 
 
+@app.route("/api/ferries")
+def get_ferries():
+    """Returnerer liste over tilgjengelige ferjer for dropdown."""
+    return jsonify(_ferries)
+
+
 @app.route("/api/geocode")
 def geocode():
     """Proxy til Kartverkets adresse- og stedsnavn-API."""
@@ -117,7 +137,8 @@ def geocode():
     def fetch_steder():
         # Relevante objekttyper (ikke individuelle adresser)
         TYPER = {"By", "Tettsted", "Tettsteddel", "Kommune", "Bydel", "Havn", "Sted",
-                 "Annen administrativ inndeling", "Grend", "Småby"}
+                 "Annen administrativ inndeling", "Grend", "Småby", "Øy", "Øy i sjø",
+                 "Fyrstasjon", "Fyr", "Odde", "Nes", "Bukt", "Sund", "Fjord"}
         url = (
             "https://ws.geonorge.no/stedsnavn/v1/sted?"
             + urllib.parse.urlencode({"sok": q, "treffPerSide": "8", "utkoordsys": "4258"})

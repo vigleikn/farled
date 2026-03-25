@@ -1,0 +1,586 @@
+[
+  {
+    "name": "HORNSTIND",
+    "imo": "9796987",
+    "mmsi": "257147000",
+    "lat": 68.23432,
+    "lon": 14.5516,
+    "lastUpdate": null
+  },
+  {
+    "name": "KVALØY",
+    "imo": "9588794",
+    "mmsi": "257072000",
+    "lat": 62.804427,
+    "lon": 6.508947,
+    "lastUpdate": null
+  },
+  {
+    "name": "VIRAK",
+    "imo": "7805162",
+    "mmsi": "257377500",
+    "lat": 66.021757,
+    "lon": 12.622588,
+    "lastUpdate": null
+  },
+  {
+    "name": "TRONDHEIMSFJORD I",
+    "imo": "9432177",
+    "mmsi": "257304900",
+    "lat": 62.73573,
+    "lon": 7.157832,
+    "lastUpdate": null
+  },
+  {
+    "name": "VIKNA",
+    "imo": "6808662",
+    "mmsi": "257078700",
+    "lat": 64.932127,
+    "lon": 11.464075,
+    "lastUpdate": null
+  },
+  {
+    "name": "RØDØY",
+    "imo": "9030357",
+    "mmsi": "257230000",
+    "lat": 69.506972,
+    "lon": 17.909402,
+    "lastUpdate": null
+  },
+  {
+    "name": "LIV GRANNES",
+    "imo": "9907902",
+    "mmsi": "257003720",
+    "lat": 64.846747,
+    "lon": 11.265538,
+    "lastUpdate": null
+  },
+  {
+    "name": "FRØYAFERJA",
+    "imo": "7529938",
+    "mmsi": "257306400",
+    "lat": 63.63775,
+    "lon": 8.80643,
+    "lastUpdate": null
+  },
+  {
+    "name": "BØMLO",
+    "imo": "9299408",
+    "mmsi": "259344000",
+    "lat": 59.820382,
+    "lon": 5.265928,
+    "lastUpdate": null
+  },
+  {
+    "name": "HARANES",
+    "imo": "7017600",
+    "mmsi": "257308600",
+    "lat": 64.730287,
+    "lon": 11.179095,
+    "lastUpdate": null
+  },
+  {
+    "name": "LØDINGEN",
+    "imo": "9607409",
+    "mmsi": "257837000",
+    "lat": 67.294403,
+    "lon": 14.388097,
+    "lastUpdate": null
+  },
+  {
+    "name": "SNØFJELL",
+    "imo": "",
+    "mmsi": "258819000",
+    "lat": 65.65,
+    "lon": 12.641666666666667,
+    "lastUpdate": null
+  },
+  {
+    "name": "TRANØY",
+    "imo": "8917340",
+    "mmsi": "257310500",
+    "lat": 68.125475,
+    "lon": 13.853087,
+    "lastUpdate": null
+  },
+  {
+    "name": "MELSHORN",
+    "imo": "9210610",
+    "mmsi": "259649000",
+    "lat": 68.726163,
+    "lon": 16.85245,
+    "lastUpdate": null
+  },
+  {
+    "name": "VARDEHORN",
+    "imo": "9210622",
+    "mmsi": "259650000",
+    "lat": 66.200972,
+    "lon": 13.01019,
+    "lastUpdate": null
+  },
+  {
+    "name": "VETLEFJORD",
+    "imo": "9264348",
+    "mmsi": "257163000",
+    "lat": 63.798622,
+    "lon": 8.679025,
+    "lastUpdate": null
+  },
+  {
+    "name": "VARGSUND",
+    "imo": "1089390",
+    "mmsi": "259049300",
+    "lat": 70.601635,
+    "lon": 23.623725,
+    "lastUpdate": null
+  },
+  {
+    "name": "SIGRID SIGURDSDOTTER",
+    "imo": "9907914",
+    "mmsi": "257014160",
+    "lat": 65.4857,
+    "lon": 12.205325,
+    "lastUpdate": null
+  },
+  {
+    "name": "MELFJORD",
+    "imo": "8714360",
+    "mmsi": "257317400",
+    "lat": 67.285343,
+    "lon": 14.38018,
+    "lastUpdate": null
+  },
+  {
+    "name": "TRONDHEIM",
+    "imo": "9018634",
+    "mmsi": "257015700",
+    "lat": 63.509592,
+    "lon": 10.141113,
+    "lastUpdate": null
+  },
+  {
+    "name": "BASTØ IV",
+    "imo": "9771420",
+    "mmsi": "257845600",
+    "lat": 59.406095,
+    "lon": 10.546747,
+    "lastUpdate": null
+  },
+  {
+    "name": "BASTØ V",
+    "imo": "9771432",
+    "mmsi": "257846800",
+    "lat": 59.429487,
+    "lon": 10.653605,
+    "lastUpdate": null
+  },
+  {
+    "name": "MALANGEN",
+    "imo": "9247003",
+    "mmsi": "258149000",
+    "lat": 68.498552,
+    "lon": 14.802253,
+    "lastUpdate": null
+  },
+  {
+    "name": "BASTØ VI",
+    "imo": "9769219",
+    "mmsi": "257847600",
+    "lat": 59.42864,
+    "lon": 10.65426,
+    "lastUpdate": null
+  },
+  {
+    "name": "TRONDENES",
+    "imo": "8112641",
+    "mmsi": "257396400",
+    "lat": 66.221677,
+    "lon": 12.939195,
+    "lastUpdate": null
+  },
+  {
+    "name": "BODØ",
+    "imo": "9151010",
+    "mmsi": "257778000",
+    "lat": 67.292117,
+    "lon": 14.398122,
+    "lastUpdate": null
+  },
+  {
+    "name": "HEILHORN",
+    "imo": "9865221",
+    "mmsi": "257099310",
+    "lat": 65.215615,
+    "lon": 12.040755,
+    "lastUpdate": null
+  },
+  {
+    "name": "OLAV DUUN",
+    "imo": "9189328",
+    "mmsi": "259589000",
+    "lat": 64.817553,
+    "lon": 11.596682,
+    "lastUpdate": null
+  },
+  {
+    "name": "BØRTIND",
+    "imo": "9894167",
+    "mmsi": "257101730",
+    "lat": 65.71306,
+    "lon": 11.919193,
+    "lastUpdate": null
+  },
+  {
+    "name": "GEISNES",
+    "imo": "8805353",
+    "mmsi": "257253400",
+    "lat": 64.637567,
+    "lon": 11.34659,
+    "lastUpdate": null
+  },
+  {
+    "name": "SVELVIK",
+    "imo": "9907990",
+    "mmsi": "258010350",
+    "lat": 59.615588,
+    "lon": 10.410422,
+    "lastUpdate": null
+  },
+  {
+    "name": "LYNGEN",
+    "imo": "9260873",
+    "mmsi": "257187000",
+    "lat": 68.851902,
+    "lon": 16.491618,
+    "lastUpdate": null
+  },
+  {
+    "name": "HÅLOGALAND",
+    "imo": "9260885",
+    "mmsi": "258472000",
+    "lat": 68.67333333333333,
+    "lon": 15.916666666666666,
+    "lastUpdate": null
+  },
+  {
+    "name": "VÅGAN",
+    "imo": "9218351",
+    "mmsi": "259679000",
+    "lat": 66.577872,
+    "lon": 12.74999,
+    "lastUpdate": null
+  },
+  {
+    "name": "TRONDHEIMSFJORD II",
+    "imo": "9432189",
+    "mmsi": "257114400",
+    "lat": 62.542638,
+    "lon": 6.070285,
+    "lastUpdate": null
+  },
+  {
+    "name": "GILDESKÅL",
+    "imo": "9081930",
+    "mmsi": "259680000",
+    "lat": 66.720333,
+    "lon": 13.476173,
+    "lastUpdate": null
+  },
+  {
+    "name": "LYSINGEN",
+    "imo": "9030371",
+    "mmsi": "257266500",
+    "lat": 65.492933,
+    "lon": 12.229373,
+    "lastUpdate": null
+  },
+  {
+    "name": "FYKAN",
+    "imo": "9081966",
+    "mmsi": "259681000",
+    "lat": 70.246433,
+    "lon": 23.394583,
+    "lastUpdate": null
+  },
+  {
+    "name": "FROVÆR",
+    "imo": "9699933",
+    "mmsi": "257119000",
+    "lat": 63.79892,
+    "lon": 8.679185,
+    "lastUpdate": null
+  },
+  {
+    "name": "LANDEGODE",
+    "imo": "9607370",
+    "mmsi": "259987000",
+    "lat": 67.288453,
+    "lon": 14.392782,
+    "lastUpdate": null
+  },
+  {
+    "name": "RAMTIND",
+    "imo": "7725910",
+    "mmsi": "257347400",
+    "lat": 63.638372,
+    "lon": 8.804147,
+    "lastUpdate": null
+  },
+  {
+    "name": "BASTØ ELECTRIC",
+    "imo": "9878993",
+    "mmsi": "257122880",
+    "lat": 59.410403,
+    "lon": 10.50839,
+    "lastUpdate": null
+  },
+  {
+    "name": "REINØY",
+    "imo": "8803006",
+    "mmsi": "257350400",
+    "lat": 69.934945,
+    "lon": 19.599737,
+    "lastUpdate": null
+  },
+  {
+    "name": "KJELLA",
+    "imo": "8615277",
+    "mmsi": "257049700",
+    "lat": 64.861167,
+    "lon": 11.28052,
+    "lastUpdate": null
+  },
+  {
+    "name": "HINNØY",
+    "imo": "9969766",
+    "mmsi": "258030970",
+    "lat": 68.420203,
+    "lon": 15.99583,
+    "lastUpdate": null
+  },
+  {
+    "name": "KVÆNANGEN",
+    "imo": "9353929",
+    "mmsi": "258032500",
+    "lat": 70.035345,
+    "lon": 20.98105,
+    "lastUpdate": null
+  },
+  {
+    "name": "REBBENESØY",
+    "imo": "9589449",
+    "mmsi": "259994000",
+    "lat": 70.056677,
+    "lon": 19.031562,
+    "lastUpdate": null
+  },
+  {
+    "name": "TORGHATTEN",
+    "imo": "9234707",
+    "mmsi": "257279000",
+    "lat": 65.583345,
+    "lon": 12.302733,
+    "lastUpdate": null
+  },
+  {
+    "name": "HURUMFERJA",
+    "imo": "7325681",
+    "mmsi": "257053700",
+    "lat": 59.427833,
+    "lon": 10.480403,
+    "lastUpdate": null
+  },
+  {
+    "name": "ULØYTIND",
+    "imo": "9589451",
+    "mmsi": "257129600",
+    "lat": 69.78333333333333,
+    "lon": 20.615000000000002,
+    "lastUpdate": null
+  },
+  {
+    "name": "SEILAND",
+    "imo": "1089405",
+    "mmsi": "257432050",
+    "lat": 59.78634,
+    "lon": 5.524,
+    "lastUpdate": null
+  },
+  {
+    "name": "SAMNØY",
+    "imo": "9825817",
+    "mmsi": "257055860",
+    "lat": 60.14623,
+    "lon": 5.426123,
+    "lastUpdate": null
+  },
+  {
+    "name": "FÆRØY",
+    "imo": "9825829",
+    "mmsi": "257055910",
+    "lat": 59.985428,
+    "lon": 5.336167,
+    "lastUpdate": null
+  },
+  {
+    "name": "HUFTARØY",
+    "imo": "9825805",
+    "mmsi": "257055930",
+    "lat": 60.079153,
+    "lon": 5.349572,
+    "lastUpdate": null
+  },
+  {
+    "name": "FLATØY",
+    "imo": "9822061",
+    "mmsi": "257055990",
+    "lat": 60.048912,
+    "lon": 5.331172,
+    "lastUpdate": null
+  },
+  {
+    "name": "LYSØY",
+    "imo": "9822073",
+    "mmsi": "257056190",
+    "lat": 60.144822,
+    "lon": 5.426333,
+    "lastUpdate": null
+  },
+  {
+    "name": "TORGTIND",
+    "imo": "9189445",
+    "mmsi": "259546000",
+    "lat": 65.677237,
+    "lon": 12.132092,
+    "lastUpdate": null
+  },
+  {
+    "name": "SELBJØRNSFJORD",
+    "imo": "9553335",
+    "mmsi": "259094000",
+    "lat": 63.439583,
+    "lon": 10.409927,
+    "lastUpdate": null
+  },
+  {
+    "name": "LAGATUN",
+    "imo": "9820398",
+    "mmsi": "257057960",
+    "lat": 63.451765,
+    "lon": 10.201813,
+    "lastUpdate": null
+  },
+  {
+    "name": "MUNKEN",
+    "imo": "9820403",
+    "mmsi": "257057980",
+    "lat": 63.50871,
+    "lon": 10.14016,
+    "lastUpdate": null
+  },
+  {
+    "name": "HAMARØY",
+    "imo": "9056313",
+    "mmsi": "257362500",
+    "lat": 68.497233,
+    "lon": 14.800833,
+    "lastUpdate": null
+  },
+  {
+    "name": "TYSFJORD",
+    "imo": "9056301",
+    "mmsi": "257363500",
+    "lat": 66.624203,
+    "lon": 13.28438,
+    "lastUpdate": null
+  },
+  {
+    "name": "BARØY",
+    "imo": "9607394",
+    "mmsi": "257741000",
+    "lat": 68.32789,
+    "lon": 16.008553,
+    "lastUpdate": null
+  },
+  {
+    "name": "BASTØ I",
+    "imo": "9144081",
+    "mmsi": "259401000",
+    "lat": 59.428562,
+    "lon": 10.47949,
+    "lastUpdate": null
+  },
+  {
+    "name": "ØRTIND",
+    "imo": "9196876",
+    "mmsi": "259552000",
+    "lat": 65.132067,
+    "lon": 12.2629,
+    "lastUpdate": null
+  },
+  {
+    "name": "BASTØ II",
+    "imo": "9144093",
+    "mmsi": "259402000",
+    "lat": 59.41219,
+    "lon": 10.490338,
+    "lastUpdate": null
+  },
+  {
+    "name": "STETIND",
+    "imo": "7633662",
+    "mmsi": "257215500",
+    "lat": 62.639702,
+    "lon": 6.52359,
+    "lastUpdate": null
+  },
+  {
+    "name": "YTTERØY",
+    "imo": "9724130",
+    "mmsi": "258046000",
+    "lat": 67.443102,
+    "lon": 14.76234,
+    "lastUpdate": null
+  },
+  {
+    "name": "ØRNES",
+    "imo": "9081942",
+    "mmsi": "257292000",
+    "lat": 68.316385,
+    "lon": 14.989285,
+    "lastUpdate": null
+  },
+  {
+    "name": "KARLSØY",
+    "imo": "7405948",
+    "mmsi": "257292400",
+    "lat": 69.83698,
+    "lon": 18.587622,
+    "lastUpdate": null
+  },
+  {
+    "name": "VENGSØY",
+    "imo": "9588782",
+    "mmsi": "257067000",
+    "lat": 69.672082,
+    "lon": 18.748002,
+    "lastUpdate": null
+  },
+  {
+    "name": "KJERRINGØY",
+    "imo": "7825588",
+    "mmsi": "257293400",
+    "lat": 69.672058,
+    "lon": 18.749142,
+    "lastUpdate": null
+  },
+  {
+    "name": "LEKA",
+    "imo": "9230866",
+    "mmsi": "258048000",
+    "lat": 65.08757,
+    "lon": 11.738077,
+    "lastUpdate": null
+  }
+]

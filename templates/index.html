@@ -185,6 +185,23 @@
       text-decoration: underline;
     }
 
+    .ferry-popup {
+      font-size: 12px;
+      min-width: 180px;
+      max-width: 250px;
+    }
+
+    .ferry-popup strong {
+      color: #2c3e50;
+      font-size: 14px;
+    }
+
+    .ferry-popup .ferry-info {
+      color: #7f8c8d;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
     /* ── Reset button ── */
     .reset-btn {
       display: none;
@@ -444,6 +461,7 @@ const appState = new SjoveiStateManager();
 // ─── Legacy State (for compatibility during migration) ────────────
 let allQuays = [];
 let allShipyards = [];
+let allFerries = [];
 let fromPoint = null, toPoint = null;
 let stopPoints = {}, stopOrder = [], stopPinMarkers = {}, stopCounter = 0;
 let pinMode = null;
@@ -480,17 +498,20 @@ map.on('zoomend', syncWaypoints);
 // ─── Quays ───────────────────────────────────────────────────
 async function loadQuays() {
   try {
-    const [quaysResponse, shipyardsResponse] = await Promise.all([
+    const [quaysResponse, shipyardsResponse, ferriesResponse] = await Promise.all([
       fetch('/api/quays'),
-      fetch('/api/shipyards')
+      fetch('/api/shipyards'),
+      fetch('/api/ferries')
     ]);
 
     allQuays = await quaysResponse.json();
     allShipyards = await shipyardsResponse.json();
-    console.log(`Loaded ${allQuays.length} quays and ${allShipyards.length} shipyards`);
+    allFerries = await ferriesResponse.json();
+    console.log(`Loaded ${allQuays.length} quays, ${allShipyards.length} shipyards, and ${allFerries.length} ferries`);
   } catch (e) {
     console.error('Failed to load data:', e);
     allShipyards = [];
+    allFerries = [];
   }
 }
 
@@ -620,6 +641,31 @@ function createShipyardPopup(pt) {
   `;
 }
 
+function createFerryPopup(pt) {
+  if (!pt || !pt.ferry) {
+    return `Fra: ${pt ? pt.name : 'Unknown location'}`;  // Default popup for non-ferry points
+  }
+
+  const ferry = pt.ferry;
+  const lastUpdate = ferry.lastUpdate
+    ? new Date(ferry.lastUpdate).toLocaleString('no-NO', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      })
+    : 'Ukjent';
+
+  return `
+    <div class="ferry-popup">
+      <strong>${ferry.name}</strong><br>
+      Ferje i drift
+      <div class="ferry-info">
+        MMSI: ${ferry.mmsi}<br>
+        Sist oppdatert: ${lastUpdate}
+      </div>
+    </div>
+  `;
+}
+
 function clearRouteDisplay() {
   [routeLayer, shadowLayer].forEach(l => { if (l) map.removeLayer(l); });
   routeLayer = shadowLayer = null;
@@ -693,6 +739,8 @@ function resetAll() {
     document.getElementById(which + '-input').classList.remove('pinned');
   });
   [routeLayer, shadowLayer, fromMarker, toMarker, pinMarkerFrom, pinMarkerTo].forEach(l => { if (l) map.removeLayer(l); });
+  if (window.pinMarkerFrom) { map.removeLayer(window.pinMarkerFrom); window.pinMarkerFrom = null; }
+  if (window.pinMarkerTo) { map.removeLayer(window.pinMarkerTo); window.pinMarkerTo = null; }
   routeLayer = shadowLayer = fromMarker = toMarker = pinMarkerFrom = pinMarkerTo = null;
   waypointMarkers.forEach(m => map.removeLayer(m));
   waypointMarkers = []; routeLatLngs = [];
@@ -703,8 +751,14 @@ function resetAll() {
 ['from', 'to'].forEach(which => {
   document.getElementById(which + '-clear').addEventListener('click', () => {
     document.getElementById(which + '-input').value = '';
-    if (which === 'from' && pinMarkerFrom) { map.removeLayer(pinMarkerFrom); pinMarkerFrom = null; }
-    if (which === 'to'   && pinMarkerTo)   { map.removeLayer(pinMarkerTo);   pinMarkerTo   = null; }
+    if (which === 'from') {
+      if (pinMarkerFrom) { map.removeLayer(pinMarkerFrom); pinMarkerFrom = null; }
+      if (window.pinMarkerFrom) { map.removeLayer(window.pinMarkerFrom); window.pinMarkerFrom = null; }
+    }
+    if (which === 'to') {
+      if (pinMarkerTo) { map.removeLayer(pinMarkerTo); pinMarkerTo = null; }
+      if (window.pinMarkerTo) { map.removeLayer(window.pinMarkerTo); window.pinMarkerTo = null; }
+    }
     clearPoint(which);
   });
 });
@@ -847,6 +901,63 @@ function makeSearch(inputId, ddId, which) {
     return el;
   }
 
+  function buildFerryItem(f) {
+    const el = document.createElement('div');
+    el.className = 'dd-item';
+
+    const name = document.createElement('div');
+    name.className = 'dd-item-name';
+    name.textContent = f.name;
+
+    const sub = document.createElement('div');
+    sub.className = 'dd-item-sub';
+    sub.textContent = 'Ferje';
+
+    el.appendChild(name);
+    el.appendChild(sub);
+
+    el.addEventListener('mousedown', e => {
+      e.preventDefault();
+      inp.value = f.name;
+      inp.classList.remove('pinned');
+      const pointData = {
+        lat: f.lat,
+        lon: f.lon,
+        name: f.name,
+        ferry: f
+      };
+      setPoint(which, pointData);
+
+      // Create enhanced marker with ferry popup
+      const popupContent = createFerryPopup(pointData);
+
+      if (which === 'from') {
+        if (window.pinMarkerFrom) map.removeLayer(window.pinMarkerFrom);
+        window.pinMarkerFrom = L.marker([f.lat, f.lon], { icon: pinIcon('#3ecfcc') })
+          .bindPopup(popupContent).addTo(map);
+      } else if (which === 'to') {
+        if (window.pinMarkerTo) map.removeLayer(window.pinMarkerTo);
+        window.pinMarkerTo = L.marker([f.lat, f.lon], { icon: pinIcon('#c4965a') })
+          .bindPopup(popupContent).addTo(map);
+      } else {
+        if (window.stopPinMarkers[which]) map.removeLayer(window.stopPinMarkers[which]);
+        window.stopPinMarkers[which] = L.marker([f.lat, f.lon], { icon: pinIcon('#a0a0a0') })
+          .bindPopup(popupContent).addTo(map);
+      }
+
+      close();
+
+      // Apply same UI cleanup fixes as other dropdown items
+      setTimeout(() => {
+        document.querySelectorAll('.dropdown.open').forEach(dd => dd.classList.remove('open'));
+        updateClearBtn(which);
+        updateBtn();
+      }, 50);
+    });
+
+    return el;
+  }
+
   function formatFacilityName(key) {
     const mapping = {
       'homepage': 'Hjemmeside',
@@ -884,6 +995,15 @@ function makeSearch(inputId, ddId, which) {
       shipyardMatches.slice(0, 10).forEach(s => frag.appendChild(buildShipyardItem(s)));
     }
 
+    // Ferry section
+    const ferryMatches = allFerries.filter(f =>
+      f.name.toLowerCase().includes(ql)
+    );
+    if (ferryMatches.length) {
+      frag.appendChild(buildSection('Ferjer'));
+      ferryMatches.slice(0, 10).forEach(f => frag.appendChild(buildFerryItem(f)));
+    }
+
     // Steder section
     if (steder.length) {
       frag.appendChild(buildSection('Steder'));
@@ -896,7 +1016,7 @@ function makeSearch(inputId, ddId, which) {
       vanlige.forEach(a => frag.appendChild(buildAddrItem(a)));
     }
 
-    if (!quays.length && !shipyardMatches.length && !addrs.length) { close(); return; }
+    if (!quays.length && !shipyardMatches.length && !ferryMatches.length && !addrs.length) { close(); return; }
     dd.appendChild(frag);
     dd.classList.add('open');
     focusIdx = -1;
@@ -1069,7 +1189,9 @@ async function triggerCalc(fit = true) {
     showResult(merged);
     drawRoute(merged, fit);
     if (pinMarkerFrom) { map.removeLayer(pinMarkerFrom); pinMarkerFrom = null; }
-    if (pinMarkerTo)   { map.removeLayer(pinMarkerTo);   pinMarkerTo   = null; }
+    if (window.pinMarkerFrom) { map.removeLayer(window.pinMarkerFrom); window.pinMarkerFrom = null; }
+    if (pinMarkerTo) { map.removeLayer(pinMarkerTo); pinMarkerTo = null; }
+    if (window.pinMarkerTo) { map.removeLayer(window.pinMarkerTo); window.pinMarkerTo = null; }
     Object.values(stopPinMarkers).forEach(m => map.removeLayer(m));
     stopPinMarkers = {};
   } catch (e) {
