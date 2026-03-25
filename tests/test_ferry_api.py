@@ -122,3 +122,50 @@ def test_get_barentswatch_token_missing_access_token():
             from ferry_api import get_barentswatch_token
             with pytest.raises(RuntimeError, match="missing 'access_token' field"):
                 get_barentswatch_token()
+
+def test_fetch_ferry_positions_success():
+    """Test successful ferry position fetching and processing"""
+    mock_vessels = [
+        {
+            'mmsi': 257741000,
+            'latitude': 69.123,
+            'longitude': 16.456,
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': 999999999,  # Not a ferry
+            'latitude': 60.0,
+            'longitude': 5.0,
+            'timestamp': '2026-03-25T10:30:00Z'
+        }
+    ]
+
+    ferry_csv_data = [
+        {'name': 'BARØY', 'imo': '9607394', 'mmsi': '257741000'}
+    ]
+
+    with patch('requests.get') as mock_get:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_vessels
+        mock_get.return_value = mock_response
+
+        from ferry_api import fetch_ferry_positions
+        positions = fetch_ferry_positions(ferry_csv_data, 'test_token')
+
+        assert len(positions) == 1
+        assert positions[0]['name'] == 'BARØY'
+        assert positions[0]['lat'] == 69.123
+        assert positions[0]['lon'] == 16.456
+
+def test_fetch_ferry_positions_api_failure():
+    """Test graceful handling of API failures"""
+    ferry_csv_data = [{'name': 'BARØY', 'imo': '9607394', 'mmsi': '257741000'}]
+
+    with patch('requests.get') as mock_get:
+        mock_get.side_effect = requests.RequestException("Network error")
+
+        from ferry_api import fetch_ferry_positions
+        positions = fetch_ferry_positions(ferry_csv_data, 'test_token')
+
+        assert positions == []  # Empty list on failure

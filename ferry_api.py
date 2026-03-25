@@ -1,5 +1,7 @@
 import os
+import sys
 import requests
+from datetime import datetime, timezone
 
 
 def get_barentswatch_token() -> str:
@@ -49,3 +51,53 @@ def get_barentswatch_token() -> str:
         )
 
     return token_data['access_token']
+
+
+def validate_norwegian_waters(lat: float, lon: float) -> bool:
+    """Validate coordinates are within Norwegian waters"""
+    return 58 <= lat <= 81 and 4 <= lon <= 32
+
+
+def fetch_ferry_positions(ferry_list: list, bearer_token: str) -> list:
+    """Fetch current positions for ferries from Barentswatch API"""
+    try:
+        headers = {'Authorization': f'Bearer {bearer_token}'}
+        url = "https://live.ais.barentswatch.no/v1/latest/combined"
+
+        response = requests.get(url, headers=headers, timeout=30)
+
+        if response.status_code != 200:
+            print(f"[ADVARSEL] Barentswatch API returned {response.status_code}", file=sys.stderr)
+            return []
+
+        vessel_data = response.json()
+        ferry_positions = []
+
+        # Create MMSI lookup for ferries
+        ferry_mmsis = {ferry['mmsi']: ferry for ferry in ferry_list if ferry.get('mmsi')}
+
+        # Find ferries in vessel data
+        for vessel in vessel_data:
+            mmsi = str(vessel.get('mmsi', ''))
+
+            if mmsi in ferry_mmsis:
+                ferry = ferry_mmsis[mmsi]
+                lat = vessel.get('latitude')
+                lon = vessel.get('longitude')
+                timestamp = vessel.get('timestamp')
+
+                if lat is not None and lon is not None and validate_norwegian_waters(lat, lon):
+                    ferry_positions.append({
+                        'name': ferry['name'],
+                        'imo': ferry.get('imo', ''),
+                        'mmsi': mmsi,
+                        'lat': lat,
+                        'lon': lon,
+                        'lastUpdate': timestamp
+                    })
+
+        return ferry_positions
+
+    except Exception as e:
+        print(f"[ADVARSEL] Ferry position fetch failed: {e}", file=sys.stderr)
+        return []
