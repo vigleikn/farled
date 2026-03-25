@@ -16,3 +16,4 @@ data/quays_cache.json
 
 # OS
 .DS_Store
+.worktrees/
