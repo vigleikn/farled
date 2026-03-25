@@ -25,10 +25,12 @@ The solution extends the current route planning system by adding ferries as a th
 
 **Ferry Processing Script** (`scripts/process_ferries.py`):
 - Reads predefined ferry CSV list (name, IMO, MMSI)
-- Filters out entries without valid MMSI numbers
+- Validates MMSI format (9 digits) and filters out entries without valid MMSI numbers
 - Queries Barentswatch AIS API for current positions of each valid MMSI
-- Handles API authentication and rate limiting (0.5s between requests)
-- Outputs structured JSON with ferry details and current coordinates
+- Handles API authentication, rate limiting (0.5s delays), and exponential backoff for 429 responses
+- Validates position data: Norwegian waters bounds (58°-81°N, 4°-32°E), timestamps within 24 hours
+- Outputs structured JSON with ferry details and validated coordinates
+- Logs failed lookups for manual review, generates partial output on individual failures
 
 **CSV Input Structure**:
 ```
@@ -60,11 +62,11 @@ BASTØ I,9144081,259401000
 
 ```python
 # Add global variable
-allFerries = []
+_ferries = []
 
 # Extend startup() function
 def startup():
-    global _graph, _kdtree, _node_list, _quays_dict, allShipyards, allFerries
+    global _graph, _kdtree, _node_list, _quays_dict, _startup_error, _shipyards, _ferries
 
     # Existing graph, quay, and shipyard loading...
 
@@ -73,16 +75,16 @@ def startup():
         ferries_path = BASE_DIR / "data" / "ferries.json"
         if ferries_path.exists():
             with open(ferries_path, 'r', encoding='utf-8') as f:
-                allFerries = json.load(f)
+                _ferries = json.load(f)
     except Exception as e:
         print(f"Warning: Could not load ferries: {e}", file=sys.stderr)
-        allFerries = []
+        _ferries = []
 
 # Add API endpoint
 @app.route("/api/ferries")
 def get_ferries():
     """Returns list of ferry positions for route planning."""
-    return jsonify(allFerries)
+    return jsonify(_ferries)
 ```
 
 **Error Handling**:
@@ -112,12 +114,32 @@ async function loadQuays() {
     ]);
     allQuays = await quaysResponse.json();
     allShipyards = await shipyardsResponse.json();
-    allFerries = await ferriesResponse.json();
+
+    // Handle ferry loading with individual error handling
+    try {
+      allFerries = ferriesResponse.ok ? await ferriesResponse.json() : [];
+    } catch (e) {
+      console.warn('Failed to load ferries:', e);
+      allFerries = [];
+    }
+
     console.log(`Loaded ${allQuays.length} quays, ${allShipyards.length} shipyards, ${allFerries.length} ferries`);
   } catch (e) {
-    console.error('Failed to load data:', e);
+    console.error('Failed to load core data:', e);
     allFerries = [];
   }
+}
+```
+
+**Ferry Icon Function**:
+```javascript
+function ferryIcon() {
+  return L.divIcon({
+    className: 'ferry-icon',
+    html: '⛴️', // Ship emoji or custom SVG
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
 }
 ```
 
@@ -126,7 +148,7 @@ async function loadQuays() {
 function createFerryMarkers() {
   allFerries.forEach(ferry => {
     const marker = L.marker([ferry.lat, ferry.lon], {
-      icon: shipIcon() // Distinct ship icon
+      icon: ferryIcon() // Distinct ferry icon (blue ship vs. shipyard markers)
     })
     .bindPopup(ferry.name) // Minimal - name only
     .on('click', () => {
@@ -160,10 +182,11 @@ function createFerryMarkers() {
 4. **Route calculates** → Standard sea route from ferry's current position to destination
 
 **Visual Design**:
-- **Ferry icons**: Ship-shaped markers distinct from pins/shipyard markers
+- **Ferry icons**: Blue ship emoji (⛴️) or custom SVG, distinct from orange shipyard and green/red pin markers
 - **Ferry popup**: Minimal - just ferry name (e.g., "BASTØ ELECTRIC")
 - **Integration**: Ferries visible alongside existing markers, no separate controls
-- **Color coding**: Ferries use distinct color vs. pins and shipyards
+- **Size differentiation**: Ferry markers slightly larger (24x24px) to distinguish from shipyard markers
+- **Z-index**: Ferries appear above route lines but below pins to maintain route visibility
 
 **Information Display**:
 - **Map markers**: Ferry name only (minimal approach)
@@ -173,10 +196,13 @@ function createFerryMarkers() {
 ### 5. Testing and Error Handling
 
 **Ferry Processing Validation**:
-- Verify all valid MMSIs receive positions from Barentswatch API
-- Log failed position lookups for manual review
-- Handle missing MMSI numbers (skip like shipyards without postal codes)
-- Validate coordinate bounds for Norwegian waters
+- **MMSI Format**: Validate 9-digit MMSI numbers, skip invalid entries
+- **API Authentication**: Handle 401/403 errors with clear error messages, script exits cleanly
+- **Rate Limiting**: Implement exponential backoff for 429 responses (max 3 retries)
+- **Coordinate Validation**: Check Norwegian waters bounds (58°-81°N, 4°-32°E)
+- **Timestamp Validation**: Reject positions older than 24 hours
+- **Partial Failures**: Generate partial JSON when some ferries fail, continue processing others
+- **Complete Failure Handling**: Script exits with clear error on authentication/network failures
 
 **Frontend Testing Scenarios**:
 - Click ferry markers → verify position sets correctly as route start
