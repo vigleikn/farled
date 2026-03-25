@@ -101,6 +101,8 @@ def status():
         "nodes": _graph.number_of_nodes() if _graph else 0,
         "edges": _graph.number_of_edges() if _graph else 0,
         "quays": len(_quays_dict),
+        "ferry_count": len(_ferries),
+        "shipyards": len(_shipyards),
     })
 
 
