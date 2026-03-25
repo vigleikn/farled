@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 from datetime import datetime, timezone
+from typing import List, Dict, Any
 
 
 def get_barentswatch_token() -> str:
@@ -58,7 +59,7 @@ def validate_norwegian_waters(lat: float, lon: float) -> bool:
     return 58 <= lat <= 81 and 4 <= lon <= 32
 
 
-def fetch_ferry_positions(ferry_list: list, bearer_token: str) -> list:
+def fetch_ferry_positions(ferry_list: List[Dict[str, Any]], bearer_token: str) -> List[Dict[str, Any]]:
     """Fetch current positions for ferries from Barentswatch API"""
     try:
         headers = {'Authorization': f'Bearer {bearer_token}'}
@@ -70,11 +71,16 @@ def fetch_ferry_positions(ferry_list: list, bearer_token: str) -> list:
             print(f"[ADVARSEL] Barentswatch API returned {response.status_code}", file=sys.stderr)
             return []
 
-        vessel_data = response.json()
+        try:
+            vessel_data = response.json()
+        except ValueError as e:
+            print(f"[ADVARSEL] Failed to parse vessel data as JSON: {e}", file=sys.stderr)
+            return []
+
         ferry_positions = []
 
-        # Create MMSI lookup for ferries
-        ferry_mmsis = {ferry['mmsi']: ferry for ferry in ferry_list if ferry.get('mmsi')}
+        # Create MMSI lookup for ferries with consistent string conversion
+        ferry_mmsis = {str(ferry.get('mmsi', '')): ferry for ferry in ferry_list if ferry.get('mmsi')}
 
         # Find ferries in vessel data
         for vessel in vessel_data:

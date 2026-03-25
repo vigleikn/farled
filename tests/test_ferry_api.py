@@ -169,3 +169,193 @@ def test_fetch_ferry_positions_api_failure():
         positions = fetch_ferry_positions(ferry_csv_data, 'test_token')
 
         assert positions == []  # Empty list on failure
+
+def test_fetch_ferry_positions_norwegian_waters_validation():
+    """Test that ferries outside Norwegian waters are filtered out"""
+    mock_vessels = [
+        {
+            'mmsi': 257741000,
+            'latitude': 69.123,  # Valid Norwegian waters
+            'longitude': 16.456,
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': 257741001,
+            'latitude': 50.0,  # Too far south
+            'longitude': 5.0,
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': 257741002,
+            'latitude': 85.0,  # Too far north
+            'longitude': 20.0,
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': 257741003,
+            'latitude': 65.0,
+            'longitude': 2.0,  # Too far west
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': 257741004,
+            'latitude': 65.0,
+            'longitude': 35.0,  # Too far east
+            'timestamp': '2026-03-25T10:30:00Z'
+        }
+    ]
+
+    ferry_csv_data = [
+        {'name': 'BARØY', 'imo': '9607394', 'mmsi': '257741000'},
+        {'name': 'FERRY2', 'imo': '9607395', 'mmsi': '257741001'},
+        {'name': 'FERRY3', 'imo': '9607396', 'mmsi': '257741002'},
+        {'name': 'FERRY4', 'imo': '9607397', 'mmsi': '257741003'},
+        {'name': 'FERRY5', 'imo': '9607398', 'mmsi': '257741004'},
+    ]
+
+    with patch('requests.get') as mock_get:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_vessels
+        mock_get.return_value = mock_response
+
+        from ferry_api import fetch_ferry_positions
+        positions = fetch_ferry_positions(ferry_csv_data, 'test_token')
+
+        # Only the first ferry should be included (within 58-81°N, 4-32°E)
+        assert len(positions) == 1
+        assert positions[0]['name'] == 'BARØY'
+
+def test_fetch_ferry_positions_missing_coordinates():
+    """Test that ferries with missing coordinates are skipped"""
+    mock_vessels = [
+        {
+            'mmsi': 257741000,
+            'latitude': 69.123,
+            'longitude': 16.456,
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': 257741001,
+            'latitude': None,  # Missing latitude
+            'longitude': 16.456,
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': 257741002,
+            'latitude': 69.123,
+            'longitude': None,  # Missing longitude
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': 257741003,
+            # Both latitude and longitude missing
+            'timestamp': '2026-03-25T10:30:00Z'
+        }
+    ]
+
+    ferry_csv_data = [
+        {'name': 'BARØY', 'imo': '9607394', 'mmsi': '257741000'},
+        {'name': 'FERRY2', 'imo': '9607395', 'mmsi': '257741001'},
+        {'name': 'FERRY3', 'imo': '9607396', 'mmsi': '257741002'},
+        {'name': 'FERRY4', 'imo': '9607397', 'mmsi': '257741003'},
+    ]
+
+    with patch('requests.get') as mock_get:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_vessels
+        mock_get.return_value = mock_response
+
+        from ferry_api import fetch_ferry_positions
+        positions = fetch_ferry_positions(ferry_csv_data, 'test_token')
+
+        # Only the first ferry should be included (has both coordinates)
+        assert len(positions) == 1
+        assert positions[0]['name'] == 'BARØY'
+
+def test_fetch_ferry_positions_http_errors():
+    """Test handling of various HTTP error codes"""
+    ferry_csv_data = [{'name': 'BARØY', 'imo': '9607394', 'mmsi': '257741000'}]
+
+    for status_code in [400, 401, 403, 404, 500, 502, 503]:
+        with patch('requests.get') as mock_get:
+            mock_response = Mock()
+            mock_response.status_code = status_code
+            mock_get.return_value = mock_response
+
+            from ferry_api import fetch_ferry_positions
+            positions = fetch_ferry_positions(ferry_csv_data, 'test_token')
+
+            assert positions == [], f"Expected empty list for HTTP {status_code}"
+
+def test_fetch_ferry_positions_malformed_json():
+    """Test handling of malformed JSON response"""
+    ferry_csv_data = [{'name': 'BARØY', 'imo': '9607394', 'mmsi': '257741000'}]
+
+    with patch('requests.get') as mock_get:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.side_effect = ValueError("Invalid JSON")
+        mock_get.return_value = mock_response
+
+        from ferry_api import fetch_ferry_positions
+        positions = fetch_ferry_positions(ferry_csv_data, 'test_token')
+
+        # Should return empty list, not raise an exception
+        assert positions == []
+
+def test_fetch_ferry_positions_mmsi_type_consistency():
+    """Test that both integer and string MMSI values are handled correctly"""
+    mock_vessels = [
+        {
+            'mmsi': 257741000,  # Integer MMSI
+            'latitude': 69.123,
+            'longitude': 16.456,
+            'timestamp': '2026-03-25T10:30:00Z'
+        },
+        {
+            'mmsi': '257741001',  # String MMSI
+            'latitude': 69.456,
+            'longitude': 16.789,
+            'timestamp': '2026-03-25T10:30:00Z'
+        }
+    ]
+
+    ferry_csv_data = [
+        {'name': 'BARØY', 'imo': '9607394', 'mmsi': 257741000},  # Integer in list
+        {'name': 'FERRY2', 'imo': '9607395', 'mmsi': '257741001'},  # String in list
+    ]
+
+    with patch('requests.get') as mock_get:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_vessels
+        mock_get.return_value = mock_response
+
+        from ferry_api import fetch_ferry_positions
+        positions = fetch_ferry_positions(ferry_csv_data, 'test_token')
+
+        # Both ferries should be found despite MMSI type differences
+        assert len(positions) == 2
+        assert positions[0]['name'] == 'BARØY'
+        assert positions[1]['name'] == 'FERRY2'
+        # All MMSI values in output should be strings
+        assert positions[0]['mmsi'] == '257741000'
+        assert positions[1]['mmsi'] == '257741001'
+
+def test_validate_norwegian_waters():
+    """Test Norwegian waters boundary validation"""
+    from ferry_api import validate_norwegian_waters
+
+    # Valid coordinates within Norwegian waters
+    assert validate_norwegian_waters(60.0, 5.0) is True
+    assert validate_norwegian_waters(69.5, 16.5) is True
+    assert validate_norwegian_waters(81.0, 32.0) is True
+    assert validate_norwegian_waters(58.0, 4.0) is True
+
+    # Invalid coordinates outside Norwegian waters
+    assert validate_norwegian_waters(57.9, 5.0) is False  # Too south
+    assert validate_norwegian_waters(81.1, 5.0) is False  # Too north
+    assert validate_norwegian_waters(60.0, 3.9) is False  # Too west
+    assert validate_norwegian_waters(60.0, 32.1) is False  # Too east
