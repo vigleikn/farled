@@ -2,7 +2,10 @@
 import csv
 import os
 import requests
+import json
+import time
 from datetime import datetime, timezone
+from pathlib import Path
 
 def validate_mmsi(mmsi_str):
     """Validate 9-digit MMSI format"""
@@ -100,3 +103,52 @@ def get_single_ferry_position(mmsi):
         return response.json()
     except requests.RequestException:
         return None
+
+def main():
+    """Process ferry CSV and generate positions JSON"""
+    csv_path = Path(__file__).parent.parent / "data" / "ferries.csv"
+    json_path = Path(__file__).parent.parent / "data" / "ferries.json"
+
+    if not csv_path.exists():
+        print(f"Error: {csv_path} not found")
+        return
+
+    print("Processing ferry CSV...")
+    ferries = process_ferry_csv(csv_path)
+    print(f"Found {len(ferries)} ferries with valid MMSI numbers")
+
+    ferry_positions = []
+
+    for ferry in ferries:
+        print(f"Getting position for {ferry['name']} (MMSI: {ferry['mmsi']})...")
+        api_data = get_single_ferry_position(ferry['mmsi'])
+
+        if api_data:
+            position = process_ferry_position(ferry['mmsi'], api_data)
+            if position:
+                ferry_positions.append({
+                    'name': ferry['name'],
+                    'imo': ferry['imo'],
+                    'mmsi': ferry['mmsi'],
+                    'lat': position['lat'],
+                    'lon': position['lon'],
+                    'lastUpdate': position.get('timestamp')
+                })
+                print(f"  ✅ Success: {ferry['name']}")
+            else:
+                print(f"  ❌ Failed validation: {ferry['name']}")
+        else:
+            print(f"  ❌ Failed API: {ferry['name']}")
+
+        time.sleep(0.5)  # Rate limiting
+
+    # Save to JSON
+    with open(json_path, 'w', encoding='utf-8') as f:
+        json.dump(ferry_positions, f, ensure_ascii=False, indent=2)
+
+    print(f"\n📊 Processing complete:")
+    print(f"  ✅ Successfully processed: {len(ferry_positions)} ferries")
+    print(f"  📁 Output saved to: {json_path}")
+
+if __name__ == "__main__":
+    main()
