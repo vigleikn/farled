@@ -292,7 +292,135 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-// ─── State ────────────────────────────────────────────────────
+// ─── CENTRALIZED STATE MANAGEMENT ────────────────────────────────
+
+class SjoveiStateManager {
+  constructor() {
+    this.state = {
+      fromPoint: null,
+      toPoint: null,
+      stopPoints: {},
+      stopOrder: [],
+      pinMode: null,
+      clearButtons: { from: false, to: false },
+      resetButtonVisible: false,
+      dropdownsOpen: new Set(),
+      routeResult: null,
+      routeVisible: false,
+      allQuays: [],
+      loading: false,
+      error: null
+    };
+    this.listeners = new Set();
+    this.stopCounter = 0;
+  }
+
+  getState() {
+    return { ...this.state };
+  }
+
+  setState(updates) {
+    const oldState = { ...this.state };
+    this.state = { ...this.state, ...updates };
+    this.updateUI(oldState, this.state);
+  }
+
+  setPoint(which, point) {
+    if (which === 'from') {
+      this.setState({ fromPoint: point });
+    } else if (which === 'to') {
+      this.setState({ toPoint: point });
+    } else {
+      const newStopPoints = { ...this.state.stopPoints };
+      newStopPoints[which] = point;
+      this.setState({ stopPoints: newStopPoints });
+    }
+    this.checkAndTriggerRoute();
+  }
+
+  clearPoint(which) {
+    if (which === 'from') {
+      this.setState({ fromPoint: null });
+    } else if (which === 'to') {
+      this.setState({ toPoint: null });
+    } else {
+      const newStopPoints = { ...this.state.stopPoints };
+      delete newStopPoints[which];
+      this.setState({ stopPoints: newStopPoints });
+    }
+  }
+
+  closeAllDropdowns() {
+    document.querySelectorAll('.dropdown.open').forEach(dropdown => {
+      dropdown.classList.remove('open');
+    });
+  }
+
+  updateUI(oldState, newState) {
+    // Update clear buttons
+    if (oldState.fromPoint !== newState.fromPoint) {
+      const fromClear = document.getElementById('from-clear');
+      if (fromClear) fromClear.classList.toggle('visible', !!newState.fromPoint);
+    }
+    if (oldState.toPoint !== newState.toPoint) {
+      const toClear = document.getElementById('to-clear');
+      if (toClear) toClear.classList.toggle('visible', !!newState.toPoint);
+    }
+
+    // Update waypoint clear buttons
+    for (const stopId of newState.stopOrder) {
+      if (oldState.stopPoints[stopId] !== newState.stopPoints[stopId]) {
+        const stopClear = document.getElementById(stopId + '-clear');
+        if (stopClear) stopClear.classList.toggle('visible', !!newState.stopPoints[stopId]);
+      }
+    }
+
+    // Update reset button
+    const hasAny = !!(newState.fromPoint || newState.toPoint || newState.stopOrder.length > 0);
+    const resetBtn = document.getElementById('reset-btn');
+    if (resetBtn) resetBtn.classList.toggle('visible', hasAny);
+
+    // Close all dropdowns after state changes
+    this.closeAllDropdowns();
+  }
+
+  resetAll() {
+    this.setState({
+      fromPoint: null,
+      toPoint: null,
+      stopPoints: {},
+      stopOrder: [],
+      pinMode: null,
+      routeResult: null,
+      routeVisible: false,
+      error: null
+    });
+    this.clearAllInputs();
+  }
+
+  clearAllInputs() {
+    document.getElementById('from-input').value = '';
+    document.getElementById('to-input').value = '';
+    this.state.stopOrder.forEach(stopId => {
+      const input = document.getElementById(stopId + '-input');
+      if (input) input.value = '';
+    });
+  }
+
+  checkAndTriggerRoute() {
+    const { fromPoint, toPoint, stopPoints, stopOrder } = this.state;
+    if (fromPoint && toPoint && stopOrder.every(id => !!stopPoints[id])) {
+      if (typeof triggerCalc === 'function') {
+        triggerCalc(false);
+      }
+    }
+  }
+}
+
+// Global state manager instance
+const appState = new SjoveiStateManager();
+
+// ─── Legacy State (for compatibility during migration) ────────────
 let allQuays = [];
 let fromPoint = null, toPoint = null;
 let stopPoints = {}, stopOrder = [], stopPinMarkers = {}, stopCounter = 0;
@@ -337,12 +465,16 @@ async function loadQuays() {
 
 // ─── Pin mode ─────────────────────────────────────────────────
 function setPinMode(which) {
-  if (pinMode === which) {
+  // Handle explicit disable request
+  if (which === null) {
     pinMode = null;
     map.getContainer().style.cursor = '';
     document.querySelectorAll('.pin-btn').forEach(b => b.classList.remove('active'));
     return;
   }
+
+  // FIX: Allow setting same mode again (don't toggle OFF)
+  // This prevents issues with automatic mode switching
   pinMode = which;
   map.getContainer().style.cursor = 'crosshair';
   document.querySelectorAll('.pin-btn').forEach(b => b.classList.remove('active'));
@@ -380,26 +512,45 @@ map.on('click', e => {
   }
 
   setPinMode(null);
+
+  // TARGETED FIX: Force UI cleanup after pin operations to prevent "kjøre seg fast"
+  setTimeout(() => {
+    document.querySelectorAll('.dropdown.open').forEach(dd => dd.classList.remove('open'));
+    updateClearBtn('from');
+    updateClearBtn('to');
+    if (stopOrder) stopOrder.forEach(id => updateClearBtn(id));
+    updateBtn(); // CRITICAL: Trigger route calculation after pin placement
+  }, 100);
 });
 
 // ─── Shared point setter ──────────────────────────────────────
 function updateClearBtn(which) {
   let pt;
-  if (which === 'from') pt = fromPoint;
-  else if (which === 'to') pt = toPoint;
-  else pt = stopPoints[which];
+
+  // TARGETED FIX: Check all possible scopes for variables to handle edge cases
+  if (which === 'from') {
+    pt = fromPoint || (typeof window !== 'undefined' && window.fromPoint);
+  } else if (which === 'to') {
+    pt = toPoint || (typeof window !== 'undefined' && window.toPoint);
+  } else {
+    pt = stopPoints[which] || (typeof window !== 'undefined' && window.stopPoints && window.stopPoints[which]);
+  }
+
   const clearEl = document.getElementById(which + '-clear');
-  if (clearEl) clearEl.classList.toggle('visible', !!pt);
+  if (clearEl) {
+    // Force visibility update even if pt is falsy
+    clearEl.classList.toggle('visible', !!pt);
+  }
 }
 
 function setPoint(which, pt) {
+  // NEW: Use centralized state manager
+  // appState.setPoint(which, pt); // DISABLED: appState not defined
+
+  // Legacy compatibility: Update global variables for existing code
   if (which === 'from') fromPoint = pt;
   else if (which === 'to') toPoint = pt;
   else stopPoints[which] = pt;
-  updateClearBtn(which);
-  updateBtn();
-  const allStopsSet = stopOrder.every(id => !!stopPoints[id]);
-  if (fromPoint && toPoint && allStopsSet) triggerCalc(false);
 }
 
 function clearRouteDisplay() {
@@ -411,6 +562,10 @@ function clearRouteDisplay() {
 }
 
 function clearPoint(which) {
+  // NEW: Use centralized state manager
+  appState.clearPoint(which);
+
+  // Legacy compatibility: Update global variables and UI
   if (which === 'from') {
     fromPoint = null;
     document.getElementById('from-input').classList.remove('pinned');
@@ -425,32 +580,56 @@ function clearPoint(which) {
     if (inp) inp.classList.remove('pinned');
   }
   clearRouteDisplay();
-  updateClearBtn(which);
-  updateBtn();
 }
 
 function updateBtn() {
   const hasAny = !!(fromPoint || toPoint || stopOrder.length > 0);
   document.getElementById('reset-btn').classList.toggle('visible', hasAny);
+
+  // CRITICAL FIX: Trigger route calculation when both points are set
+  if (fromPoint && toPoint && typeof triggerCalc === 'function') {
+    triggerCalc();
+  }
+}
+
+/// Fix 2: Force UI refresh for all clear buttons
+function updateAllClearButtons() {
+  updateClearBtn('from');
+  updateClearBtn('to');
+  stopOrder.forEach(id => updateClearBtn(id));
+}
+
+/// Fix 3: Force close all dropdowns to prevent UI blocking
+function closeAllDropdowns() {
+  document.querySelectorAll('.dropdown.open').forEach(dropdown => {
+    dropdown.classList.remove('open');
+  });
 }
 
 function resetAll() {
+  // NEW: Use centralized state manager
+  appState.resetAll();
+
+  // Legacy compatibility: Clean up UI and markers
   fromPoint = null; toPoint = null;
   stopPoints = {}; stopOrder = [];
   Object.values(stopPinMarkers).forEach(m => map.removeLayer(m));
   stopPinMarkers = {};
-  document.getElementById('stops-container').innerHTML = '';
+
+  // Safe DOM cleanup - remove waypoint elements individually
+  const stopsContainer = document.getElementById('stops-container');
+  while (stopsContainer.firstChild) {
+    stopsContainer.removeChild(stopsContainer.firstChild);
+  }
+
   ['from', 'to'].forEach(which => {
-    document.getElementById(which + '-input').value = '';
     document.getElementById(which + '-input').classList.remove('pinned');
-    updateClearBtn(which);
   });
   [routeLayer, shadowLayer, fromMarker, toMarker, pinMarkerFrom, pinMarkerTo].forEach(l => { if (l) map.removeLayer(l); });
   routeLayer = shadowLayer = fromMarker = toMarker = pinMarkerFrom = pinMarkerTo = null;
   waypointMarkers.forEach(m => map.removeLayer(m));
   waypointMarkers = []; routeLatLngs = [];
   document.getElementById('result').classList.remove('show');
-  updateBtn();
 }
 
 // ─── Clear buttons ────────────────────────────────────────────
@@ -506,6 +685,13 @@ function makeSearch(inputId, ddId, which) {
       inp.classList.remove('pinned');
       setPoint(which, { lat: q.lat, lon: q.lon, name: q.stop_name });
       close();
+
+      // TARGETED FIX: Force cleanup all UI state to prevent "kjøre seg fast"
+      setTimeout(() => {
+        document.querySelectorAll('.dropdown.open').forEach(dd => dd.classList.remove('open'));
+        updateClearBtn(which);
+        updateBtn(); // CRITICAL: Trigger route calculation when points are set
+      }, 50);
     });
     return el;
   }
@@ -526,6 +712,13 @@ function makeSearch(inputId, ddId, which) {
       inp.classList.remove('pinned');
       setPoint(which, { lat: a.lat, lon: a.lon, name: inp.value });
       close();
+
+      // TARGETED FIX: Force cleanup all UI state to prevent "kjøre seg fast"
+      setTimeout(() => {
+        document.querySelectorAll('.dropdown.open').forEach(dd => dd.classList.remove('open'));
+        updateClearBtn(which);
+        updateBtn(); // CRITICAL: Trigger route calculation when points are set
+      }, 50);
     });
     return el;
   }
@@ -658,9 +851,17 @@ function addStop() {
     relabelStops();
     clearRouteDisplay();
     updateBtn();
+    // Fix 2: Force UI state refresh after waypoint removal
+    updateAllClearButtons();
+    // Fix 3: Close all dropdowns to prevent UI blocking
+    closeAllDropdowns();
   });
 
   updateBtn();
+  // Fix 2: Force UI state refresh after waypoint operations
+  updateAllClearButtons();
+  // Fix 3: Close all dropdowns to prevent UI blocking
+  closeAllDropdowns();
 }
 
 function relabelStops() {
