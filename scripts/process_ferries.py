@@ -1,6 +1,7 @@
 # scripts/process_ferries.py
 import csv
 import os
+import requests
 
 def validate_mmsi(mmsi_str):
     """Validate 9-digit MMSI format"""
@@ -39,3 +40,20 @@ def get_api_headers():
     if not token:
         raise ValueError("BARENTSWATCH_API_TOKEN environment variable required")
     return {'Authorization': f'Bearer {token}'}
+
+def get_single_ferry_position(mmsi):
+    """Get single ferry position from Barentswatch API"""
+    try:
+        headers = get_api_headers()
+        url = f"https://www.barentswatch.no/bwapi/v1/ais/latest/{mmsi}"
+
+        response = requests.get(url, headers=headers, timeout=10)
+
+        if response.status_code == 401:
+            raise ValueError("API authentication failed - check token")
+        elif response.status_code != 200:
+            return None
+
+        return response.json()
+    except requests.RequestException:
+        return None

@@ -34,3 +34,37 @@ def test_get_api_headers():
         assert False, "Should have raised ValueError"
     except ValueError as e:
         assert "BARENTSWATCH_API_TOKEN" in str(e)
+
+def test_get_single_ferry_position():
+    from scripts.process_ferries import get_single_ferry_position
+
+    # Mock response test
+    class MockResponse:
+        def __init__(self, status_code, json_data):
+            self.status_code = status_code
+            self._json_data = json_data
+
+        def json(self):
+            return self._json_data
+
+    # Test with mock data
+    import scripts.process_ferries
+    original_get = scripts.process_ferries.requests.get if hasattr(scripts.process_ferries, 'requests') else None
+
+    def mock_get(*args, **kwargs):
+        return MockResponse(200, {
+            'latitude': 59.0,
+            'longitude': 10.0,
+            'timestamp': '2026-03-25T10:00:00Z'
+        })
+
+    # Temporarily replace requests.get
+    if hasattr(scripts.process_ferries, 'requests'):
+        scripts.process_ferries.requests.get = mock_get
+
+        result = get_single_ferry_position("257122880")
+        assert result == {'latitude': 59.0, 'longitude': 10.0, 'timestamp': '2026-03-25T10:00:00Z'}
+
+        # Restore original
+        if original_get:
+            scripts.process_ferries.requests.get = original_get
