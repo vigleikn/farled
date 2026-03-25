@@ -12,6 +12,7 @@ import networkx as nx
 
 from nsr import fetch_quays, get_quays_dict
 from routing import build_graph, find_route
+from ferry_api import refresh_ferry_positions
 from dotenv import load_dotenv
 
 # ---------------------------------------------------------------------------
@@ -31,12 +32,13 @@ _kdtree = None
 _node_list = None
 _quays_dict = {}
 _shipyards = []
+_ferries = []
 _startup_error = None
 
 
 def startup():
     """Laster farled-graf og kai-liste ved oppstart."""
-    global _graph, _kdtree, _node_list, _quays_dict, _startup_error, _shipyards
+    global _graph, _kdtree, _node_list, _quays_dict, _startup_error, _shipyards, _ferries
 
     # --- Farled-graf ---
     try:
@@ -69,6 +71,15 @@ def startup():
     except Exception as e:
         print(f"[ADVARSEL] Kunne ikke laste verft: {e}", file=sys.stderr)
         _shipyards = []
+
+    # --- Ferries (Fresh API Data) ---
+    try:
+        ferries_csv_path = BASE_DIR / "data" / "ferries.csv"
+        _ferries = refresh_ferry_positions(ferries_csv_path)
+        print(f"Lastet {len(_ferries)} ferjer fra Barentswatch API", file=sys.stderr)
+    except Exception as e:
+        print(f"[ADVARSEL] Ferry API refresh failed: {e}", file=sys.stderr)
+        _ferries = []
 
 
 # ---------------------------------------------------------------------------
